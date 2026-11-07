@@ -1,0 +1,88 @@
+# SystemHelper (com.mobiletools.systemhelper) IOC 清单
+# 生成时间: 2026-11-07
+# 用途: 导入 NetGuard / RethinkDNS / 路由器 DNS 过滤 / 企业 EDR
+
+# ---------- 网络端点 ----------
+dm.wo.com.cn
+cnc-labs.eicp.net
+webservice.chinaunicom.com
+198.51.100.26
+
+# ---------- 完整 URL ----------
+http://dm.wo.com.cn:18080/registerv3
+http://dm.wo.com.cn:18080/public/ip
+http://dm.wo.com.cn:6002/registerv3/getRegisterLog
+http://198.51.100.26:8080/bonc_Register/RegisterPort?wsdl
+http://cnc-labs.eicp.net:8080/registerService/web/getRegister
+http://webservice.chinaunicom.com/GetRegister
+
+# ---------- Android 包与组件 ----------
+com.mobiletools.systemhelper
+com.mobiletools.systemhelper.uid
+com.mobiletools.systemhelper.permission
+com.mobiletools.systemhelper.Activity.TestActivity
+com.mobiletools.systemhelper.control.DMApplication
+com.mobiletools.systemhelper.control.OnBootReceiver
+com.mobiletools.systemhelper.control.SIMStateReceiver
+com.mobiletools.systemhelper.control.ConnectStateReceiver
+com.mobiletools.systemhelper.control.ScheduleRegisterReceiver
+com.mobiletools.systemhelper.control.AppInfoRegisterReceiver
+com.mobiletools.systemhelper.service.RegisterHelperService
+com.mobiletools.systemhelper.service.IRegisterHelperService
+com.mobiletools.systemhelper.service.RegisterIntentService
+com.mobiletools.systemhelper.service.RegisterJobService
+
+# ---------- 文件哈希 ----------
+8e9df43efd6d898f6db46053e69d37fb
+416d0fc0405fc19b243e72f2a7963517e5b88991a7dfac494934449969a6015d
+
+# ---------- 签名指纹 ----------
+SHA1:   0D:0B:1F:90:18:23:91:C7:75:04:B8:43:DD:39:37:B2:3D:74:9A:E6
+SHA256: 87:4B:8C:A2:29:7F:53:A3:73:B1:B9:35:C1:34:CB:0E:B1:FF:73:81:E5:44:91:B8:8C:64:3A:6B:9C:46:DB:77
+CN=NewDM, OU=RI, O=CU, L=BJ, ST=BJ, C=86
+
+# ---------- 内嵌上报公钥证书 ----------
+assets/pub.cer
+CN=UNICOM, OU=UNICOM, O=UNICOM, C=CN, ST=BJ, L=BJ
+RSA 1024-bit, 2019-05-24 -> 2119-04-30
+Serial: 0x528b9360
+
+# ---------- 本地敏感数据位置 ----------
+/data/data/com.mobiletools.systemhelper/databases/systemhelper
+/data/data/com.mobiletools.systemhelper/shared_prefs/com_mobiletools_systemhelper_preference.xml
+
+# ============================================================
+# 4.0.0-20260910 新增（cudms）
+# ============================================================
+https://dm.wo.com.cn:18081/register
+dm.wo.com.cn:18081
+# 注意：18080 仍作为 HTTP 回退通道存在，必须与 18081 同时封堵
+dm.wo.com.cn:18080
+
+# 4.0.0 哈希
+11ee024eb1a9fe68a9c403a23c882fd0
+42fbfebedd8711b2ca22d3d969324f7ed7c757d838e143bf6cf4d2e8e1ed8556
+
+# 4.0.0 上报公钥（RSA-2048）
+assets/cudms_main_pub.cer
+4184ae3c9efdc1eff60178a63b8d3da9
+CN=UNICOM, 2024-11-04 -> 2124-10-11, serial 0x32353034
+
+# 4.0.0 新增权限
+android.permission.BLUETOOTH
+android.permission.BLUETOOTH_CONNECT
+
+# 4.0.0 新增上报字段
+PairedDevice
+PairedMacAddress
+SatelliteSupport
+SatelliteEnabled
+
+# ============================================================
+# 3.0.1 哈希
+# ============================================================
+9b68bd6b627a0e35b158a86e25ed9dc8
+1de8d965e295db27e189aa179cdb45438d7f759cffbb43ce55f840b614ff6c65
+# 3.0.1 签名主体（小米平台密钥）
+CN=MIUI, O=Xiaomi
+7B:6D:C7:07:9C:34:73:9C:E8:11:59:71:9F:B5:EB:61:D2:A0:32:25

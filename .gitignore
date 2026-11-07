@@ -1,0 +1,17 @@
+# 不提交任何二进制样本 / 反编译产物
+*.apk
+*.dex
+*.zip
+*.db
+sources/
+jadx*/
+analysis/
+output/
+
+# 本地与编辑器
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+.vscode/
+__pycache__/
