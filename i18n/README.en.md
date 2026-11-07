@@ -2,9 +2,9 @@
 
 **A preinstalled "device registration" component with no UI, no off switch, and no uninstall path — what it actually collects, where it sends it, and why you cannot turn it off.**
 
-This repository contains static-analysis results for three versions (1.2 / 3.0.1 / 4.0.0) of the Android package `com.mobiletools.systemhelper`. Every claim is traceable to a `file:line` reference in the decompiled APK. No APK and no decompiled source is redistributed here — only findings and public certificates (see [DISCLAIMER](DISCLAIMER.md)).
+This repository contains static-analysis results for three versions (1.2 / 3.0.1 / 4.0.0) of the Android package `com.mobiletools.systemhelper`. Every claim is traceable to a `file:line` reference in the decompiled APK. No APK and no decompiled source is redistributed here — only findings and public certificates (see [DISCLAIMER](../DISCLAIMER.md)).
 
-*Translations: [简体中文](README.md) · [繁體中文](README.zh-TW.md) · [日本語](README.ja.md)*
+*Translations: [简体中文](../README.md) · [繁體中文](README.zh-TW.md) · [日本語](README.ja.md)*
 
 ---
 
@@ -54,7 +54,7 @@ flowchart LR
   classDef t fill:#fff3cd,stroke:#d39e00,color:#000;
 ```
 
-The other four network endpoints found in 1.2 (`/public/ip`, `:6002/getRegisterLog`, the BONC SOAP service, and the `cnc-labs.eicp.net` dynamic-DNS host) are dead code — see [02-api-protocol.md](docs/02-api-protocol.md).
+The other four network endpoints found in 1.2 (`/public/ip`, `:6002/getRegisterLog`, the BONC SOAP service, and the `cnc-labs.eicp.net` dynamic-DNS host) are dead code — see [02-api-protocol.md](../docs/02-api-protocol.md).
 
 ---
 
@@ -110,7 +110,7 @@ On top of that, `model` and `manuf` travel in the query string in the clear: how
 | App-list window | 7 days | 24 hours | 24 hours |
 | Local queue | 100 rows | 10 rows, **delete-before-send**, 0–24 h jitter | same as 3.0.1 |
 
-**On "anti-fraud": none of the three clients has any anti-fraud capability.** Zero hits across strings, native libraries, network endpoints and capability checks (see [03](docs/03-compare-3.0.1.md) §10). What it does collect — precise location, cell/WiFi identifiers, app inventory, call-drop causes — happens to be ideal input for anti-fraud profiling. That is a capability question, not a feature: the client not judging does not mean the upstream does not profile.
+**On "anti-fraud": none of the three clients has any anti-fraud capability.** Zero hits across strings, native libraries, network endpoints and capability checks (see [03](../docs/03-compare-3.0.1.md) §10). What it does collect — precise location, cell/WiFi identifiers, app inventory, call-drop causes — happens to be ideal input for anti-fraud profiling. That is a capability question, not a feature: the client not judging does not mean the upstream does not profile.
 
 ---
 
@@ -118,15 +118,15 @@ On top of that, `model` and `manuf` travel in the query string in the clear: how
 
 | # | Document | Contents |
 |---|---|---|
-| 01 | [1.2 reverse engineering](docs/01-reverse-1.2.md) | permission model, four upload triggers, cleartext channel, local retention, four-tier remediation, fixed evidence for complaints |
-| 02 | [Upload API report](docs/02-api-protocol.md) | which of the 6 URLs are live, AES/`sign` structure, local mock verification |
-| 03 | [3.0.1 comparison](docs/03-compare-3.0.1.md) | signer change to Xiaomi, full obfuscation, Baidu location SDK, `SigInfo` fields, `MSISDN` removed |
-| 04 | [4.0.0 comparison](docs/04-compare-4.0.0.md) | three-version comparison, four genuine fixes, Bluetooth/satellite expansion, design-intent analysis (facts vs. inference kept separate) |
-| 05 | [CU-DMS protocol analysis](docs/05-cudms-protocol.md) | 49-field dictionary with sensitivity grades, four client defects, hardening advice |
-| 06 | [Claim verification](docs/06-rumor-verification.md) | item-by-item check of a Japanese thread and two Chinese sources; which claims hold, which are misattributed |
-| — | [IOCs](docs/iocs.txt) | endpoints, URLs, components, hashes, signing fingerprints |
-| — | [evidence/](evidence/) | public certificates and keys with sizes and hashes |
-| — | [tools/](tools/) | two PowerShell scripts: disable/revoke/purge/hosts-blackhole, and on-device evidence extraction |
+| 01 | [1.2 reverse engineering](../docs/01-reverse-1.2.md) | permission model, four upload triggers, cleartext channel, local retention, four-tier remediation, fixed evidence for complaints |
+| 02 | [Upload API report](../docs/02-api-protocol.md) | which of the 6 URLs are live, AES/`sign` structure, local mock verification |
+| 03 | [3.0.1 comparison](../docs/03-compare-3.0.1.md) | signer change to Xiaomi, full obfuscation, Baidu location SDK, `SigInfo` fields, `MSISDN` removed |
+| 04 | [4.0.0 comparison](../docs/04-compare-4.0.0.md) | three-version comparison, four genuine fixes, Bluetooth/satellite expansion, design-intent analysis (facts vs. inference kept separate) |
+| 05 | [CU-DMS protocol analysis](../docs/05-cudms-protocol.md) | 49-field dictionary with sensitivity grades, four client defects, hardening advice |
+| 06 | [Claim verification](../docs/06-rumor-verification.md) | item-by-item check of a Japanese thread and two Chinese sources; which claims hold, which are misattributed |
+| — | [IOCs](../docs/iocs.txt) | endpoints, URLs, components, hashes, signing fingerprints |
+| — | [evidence/](../evidence/) | public certificates and keys with sizes and hashes |
+| — | [tools/](../tools/) | two PowerShell scripts: disable/revoke/purge/hosts-blackhole, and on-device evidence extraction |
 
 ---
 
@@ -166,7 +166,7 @@ This works even against platform-signed components and is the only mitigation th
 
 ## About paths inside the reports
 
-Paths such as `analysis/xxx.py`, `jadx_full/sources/...` and `output/xxx.json` refer to the author's local working copy and are **not published here** (see [DISCLAIMER](DISCLAIMER.md)). `file:line` references point into the decompilation of the corresponding APK; open the same APK with jadx to reproduce. Sample hashes:
+Paths such as `analysis/xxx.py`, `jadx_full/sources/...` and `output/xxx.json` refer to the author's local working copy and are **not published here** (see [DISCLAIMER](../DISCLAIMER.md)). `file:line` references point into the decompilation of the corresponding APK; open the same APK with jadx to reproduce. Sample hashes:
 
 | Version | SHA-256 |
 |---|---|
@@ -178,14 +178,14 @@ Paths such as `analysis/xxx.py`, `jadx_full/sources/...` and `output/xxx.json` r
 
 ## Licence
 
-Text and diagrams are released under **[CC BY 4.0](LICENSE)**. Reuse, translation, reposting and commercial republication are all welcome — keep attribution and a link to this repository, and indicate changes.
+Text and diagrams are released under **[CC BY 4.0](../LICENSE)**. Reuse, translation, reposting and commercial republication are all welcome — keep attribution and a link to this repository, and indicate changes.
 
 ---
 
 ## Facts vs. inference
 
 - Fields, permissions, call chains, certificates and hashes are verifiable inside the APK: facts.
-- Statements about intent and about where the data may go are explicitly marked as inference (see [04](docs/04-compare-4.0.0.md) §5.5, with three levels of claim strength and an explicit boundary statement).
+- Statements about intent and about where the data may go are explicitly marked as inference (see [04](../docs/04-compare-4.0.0.md) §5.5, with three levels of claim strength and an explicit boundary statement).
 - This repository does **not** claim the dataset has been sold, shared, or used for any regulatory profiling. There is no evidence for such a claim.
 
-If a fact is wrong, open an issue with the `file:line` reference — corrections are applied promptly. See [CONTRIBUTING](CONTRIBUTING.md).
+If a fact is wrong, open an issue with the `file:line` reference — corrections are applied promptly. See [CONTRIBUTING](../CONTRIBUTING.md).

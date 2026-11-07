@@ -181,7 +181,7 @@ adb shell pm revoke com.mobiletools.systemhelper android.permission.READ_PHONE_S
 
 > 示例：本文译自 "SystemHelper" 研究报告（CC BY 4.0），原文链接：<本仓库地址>。
 
-其他语言版本：[繁體中文](README.zh-TW.md) · [English](README.en.md) · [日本語](README.ja.md)
+其他语言版本：[繁體中文](i18n/README.zh-TW.md) · [English](i18n/README.en.md) · [日本語](i18n/README.ja.md)
 
 ---
 

@@ -1,4 +1,9 @@
-# 不提交任何二进制样本 / 反编译产物
+# ---- 本地工作区（不进仓库）----
+internal/
+publish/
+artex-stress/
+
+# ---- 不提交任何二进制样本 / 反编译产物 ----
 *.apk
 *.dex
 *.zip
@@ -8,7 +13,7 @@ jadx*/
 analysis/
 output/
 
-# 本地与编辑器
+# ---- 本地与编辑器 ----
 .DS_Store
 Thumbs.db
 *.log
