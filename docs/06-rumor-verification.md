@@ -1,11 +1,16 @@
-# SystemHelper · 日文原帖（@tanaka_yuto）逐条核验
+# SystemHelper · 多处原帖逐条核验
 
-> **核验对象**：X 用户 `@tanaka_yuto` 于 2026-11-02 01:29 发布的日文帖
-> <https://x.com/tanaka_yuto/status/2117066492672110700>（约 8,500 浏览）
-> 标题句：「プリインストールアプリに潜む、『監視SDK』」（预装应用里潜藏的"监控 SDK"）
+> **核验范围**：围绕同一事件的**五方**公开文本，逐条比对代码。
+>
+> | # | 来源 | 性质 |
+> |---|---|---|
+> | ① | X 用户 `@tanaka_yuto`，2026-11-02 01:29 发布的日文帖<br><https://x.com/tanaka_yuto/status/2117066492672110700>（约 8,500 浏览，标题句「プリインストールアプリに潜む、『監視SDK』」） | 一手爆料，含技术细节 |
+> | ② | 通信人家园（C114）帖《SystemHelper组件争议背后：手机反诈不该成为隐私收集的"灰色后门"》<br><https://www.txrjy.com/thread-1442229-1-1.html>（2026-11 上旬，**游客不可读**，据同期转载/整理稿间接核验，见 §8） | 论坛帖 + 整理稿 |
+> | ③ | 中文评论文章（同上标题的正文），见 §9 | 评论/倡议文体 |
+> | ④ | 什么值得买聚合稿《SystemHelper风波到三星：哪些确认了，哪些还是传闻》<br><https://post.smzdm.com/p/arzd2npg/>（2026-11-07，页面标注"内容由AI生成"） | AIGC 二手聚合 |
+> | ⑤ | 技术核验 Gist《关于"小米反诈监控"传闻的技术核验》（std-microblock）<br><https://gist.github.com/std-microblock/c38cacab22bf0fffb94b247e09a4d948>（2026-11-07） | 独立第三方的技术拆解 |
+>
 > **本地样本**：`1.2-20220907` / `3.0.1-20260313` / `4.0.0-20260910`（同一包名 `com.mobiletools.systemhelper`）
-> **第二来源**：通信人家园（C114）帖《SystemHelper组件争议背后：手机反诈不该成为隐私收集的"灰色后门"》
-> <https://www.txrjy.com/thread-1442229-1-1.html>（2026-11 上旬；**游客不可读**，正文需登录，本报告据标题与同期转载/整理稿间接核验，见 §8）
 > **方法**：androguard 4.1.4 复核三份 APK 元数据 + jadx 反编译源码逐行比对 + dex 字符串计数
 > **日期**：2026-11-07 ｜ **结论级别**：高置信（每条给出可复现的文件与行号）
 >
@@ -25,6 +30,9 @@
 - **不在本包内（1 条）**：AiGuard / GuardProvider —— 那是 `com.miui.guardprovider` 与 `com.miui.securitycenter`。
 - **第二来源（通信人家园帖）**：正文需登录，据同期整理稿核验，"插移动卡照样上报""24 小时应用清单""跳过 com.android""无华为"四条**均被代码证实**（见 §8）。
 - **第三来源（中文评论文章）**：方向对、**主体错**。"上传反诈服务器及第三方风控平台"**内容是真的**，但主体是 `com.miui.securitycenter`（`eps.caict.ac.cn`、`gateway-papa.cloud.weizhi.com`，厂商文档有披露），**不是 SystemHelper**；"后台运行数据"应改为"前台时长"；"照明弹豁免"无法用 APK 证实，但有可验证替代（见 §9）。
+
+- **第四来源（什么值得买聚合稿）**：事实分层做得好（"组件存在/流量存在" ← 可证，"流量内容" ← 不可证），但它是 AI 聚合稿，个案例证不能当结论；它停在"确认不了内容"的地方，正是本报告用静态分析补上的那一段（见 §11）。
+- **第五来源（技术核验 Gist）**：与这份报告**独立**得出同一组结论——`dm.wo.com.cn` 归 SystemHelper，反诈/录屏能力归 securitycenter 与 guardprovider。这种"两条路径同一落点"比任何单方论证都硬；仅第三档唤醒周期有分歧（见 §12）。
 
 作者自己在帖末写了「私も間違ってるかもしれない」（我也可能搞错），所以下面按"可复现证据"逐条给结论，而不是按立场。
 
@@ -311,14 +319,6 @@ adb shell dumpsys alarm | grep -i systemhelper
 
 ---
 
-## 10. 边界声明
-
-- 本地结论均可用文内 `文件:行号` 复核；源码位于 `jadx_out/sources`（1.2）、`jadx_v301/sources`（3.0.1）、`jadx_v4/sources`（4.0）。
-- 本帖 ④⑤ 涉及的两个组件本工作区无样本，**不并入 SystemHelper 的结论**；如需定性，须单独取 `com.miui.guardprovider` 与 `com.miui.securitycenter` 做同等级别反编译比对。
-- 帖子的 ⑦ 属法域与第三方研究范畴，本报告不做背书。
-
----
-
 ## 10. 三版差异速查（原分散在各版本报告中的核对结论，已合并）
 
 | 断言 | 1.2（20220907） | 3.0.1（20260313） | 4.0.0（20260910） |
@@ -334,6 +334,58 @@ adb shell dumpsys alarm | grep -i systemhelper
 | 权限数量 | 见各版报告 | 17 项 | **19 项**（17 + `BLUETOOTH` + `BLUETOOTH_CONNECT`） |
 
 > 帖子 ④⑤ 描述的 `AiGuard`、`foregroundServiceType=0xA0`、`AudioRecord(4)=VOICE_CALL`、`MediaProjection` 截屏、`detection-aigc.engine.miui.com`，属于同机的 `com.miui.guardprovider` 与 `com.miui.securitycenter`，不是本包。本报告对 SystemHelper 的结论不包含这些能力。
+
+---
+
+## 11. 第四来源：什么值得买聚合稿（AIGC）
+
+**来源**：<https://post.smzdm.com/p/arzd2npg/>《SystemHelper风波到三星：哪些确认了，哪些还是传闻》（2026-11-07）。
+页面标注「内容由AI生成」，正文是对 B 站视频、微博、知乎、小红书等十余条原始发帖的转述聚合。**只能核验其中可被代码判定的断言**，转述链条本身不作为证据。
+
+| # | 断言 | 代码 / 机制判定 | 结论 |
+|---|---|---|---|
+| 1 | 国行系统同时存在 `com.mobiletools.systemhelper` 与高通 `com.qualcomm.qti.services.systemhelper`，后者别动 | 两个包名完全不同。本报告分析的始终是前者；后者是高通平台底层服务，与本包无调用关系 | ✅ 成立，这条提醒很有必要 |
+| 2 | 「SystemHelper 与 SystemHelperService 均有后台 WLAN 流量记录」 | 本包确有联网行为（四类触发 + 周期上报）；但若 `SystemHelperService` 指高通包导出的服务，其流量与本包无关，需按包名区分 | ⚠️ 需分清包名 |
+| 3 | 抓到的更像「18 KB 的设备信息上报」，对象指向运营商 | 方向正确：唯一活跃端点 `dm.wo.com.cn` 属联通。体积量级也自洽——`AppInfo` 每条约 150–250 字节，100 个应用即 15–25 KB | ✅ 成立 |
+| 4 | 「能确认它在、有流量，确认不了流量里是什么」 | 对**被动抓包**成立：body 是密文，密钥由明文派生或被服务端公钥包裹，旁观者解不开。但"字段集合"不靠抓包、靠代码，见 §3.3 的 49 字段字典 | ⚠️ 两句都对，不矛盾 |
+| 5 | 「不插联通卡也照样上报」 | 1.2 成立（WiFi 分支不做任何 SIM 校验）；3.0.1/4.0 有 MCC 门，但 `isChinaNetwork()` 异常路径 `return TRUE` | ✅ 成立 |
+| 6 | 「权限关掉，过一会又全自动打开」 | 机制上可解释：`priv-app` 的运行时权限由 ROM 的 `default-permissions` 在开机/重装时重新授予，用户侧撤销可能被覆盖。**属推断，需按机型验证** | ⚠️ 机制成立，个案无法用 APK 判定 |
+| 7 | 「adb 卸载后，OTA 大版本或恢复出厂会回来」 | 与 `priv-app` 机制一致：`pm uninstall --user 0` 只删当前用户副本 | ✅ 成立 |
+| 8 | 「有人删错包导致手机反复重启」「卸载后不得不清数据救回」 | 轶事，无法用本包验证；但风险真实——误删厂商私有组件确实可能 bootloop | ❓ 不可验证，风险提示有效 |
+| 9 | 「港版/外版三星看不到这个组件」 | 与"运营商定制预装"的身份一致，但覆盖面无法用本包证明 | ⚠️ 方向合理，证据不足 |
+| 10 | 「S24 Ultra 国行，权限关不掉」 | 若为 `priv-app` + 平台签名，`pm disable` 可能被系统策略拒绝——与 3.0.1 起改用小米平台密钥的情形同类 | ⚠️ 机型相关 |
+
+**一句话**：它的**事实分层**值得学（"组件存在/流量存在"是可证的，"流量内容"不可证，"官方回应"还没有），但作为 AIGC 聚合稿，个案例证不能当结论。
+
+---
+
+## 12. 第五来源：技术核验 Gist（std-microblock）
+
+**来源**：<https://gist.github.com/std-microblock/c38cacab22bf0fffb94b247e09a4d948>《关于"小米反诈监控"传闻的技术核验》（2026-11-07，29 stars）。
+独立完成的第三方拆解，结论与本报告**高度重合**，且在"域名用途"上比我们走得更细——逐条落到了调用点与字段。
+
+| # | 该文的断言 | 与本报告比对 | 判定 |
+|---|---|---|---|
+| 1 | `dm.wo.com.cn:18080` 属预置的 `com.mobiletools.systemhelper` | 与本报告核心结论完全一致 | ✅ 相互印证 |
+| 2 | 上报字段：IMEI、ICCID、IMSI、MNC、网络制式、TAC、CID、PCI、机型；另用 `UsageStatsManager.queryAndAggregateUsageStats()` 取前台时长 | 与 §3.3（4.0 字段字典）、[03](03-compare-3.0.1.md) §4 一致 | ✅ 一致 |
+| 3 | 用 `AlarmManager.setExactAndAllowWhileIdle()` 按 24h / 12h / 1h 周期唤醒 | 24h、12h 与我们读到的常量一致；第三档我们读到 **30 min**（`ScheduleRegisterReceiver` 的 `1800000` ms） | ⚠️ 仅第三档有差异，疑为构建/机型差异 |
+| 4 | 反诈画像、录屏、录音属 `com.miui.securitycenter` 与 `com.miui.guardprovider`，不是本包 | 与 §5、§8.3、§9.2 第 10 条同一结论，且给出更硬的证据链 | ✅ 一致，且更细 |
+| 5 | `fraud-detection.engine.miui.com` 是 NFC 门禁的**配置下发**接口（`/nfc/antifraud/config`，上行只有 `deviceModel` 与版本号） | 我们此前只写"需另证"，此处补上调用点与字段 | ✅ 采纳 |
+| 6 | `flash.sec.miui.com` 是安全中心通用接口（`/user/ra` 上报已装应用包名与版本、`/gc/dir` 拉清理规则） | 与 §5.3 的外部核验方向一致 | ✅ 采纳 |
+| 7 | `eps.caict.ac.cn/eps/collect` 与 `gateway-papa.cloud.weizhi.com/papa/upload` 属紧急报警辅助通道，有独立开关与隐私政策 | 与厂商隐私文档、§9.2 第 3 条一致 | ✅ 一致 |
+
+**为什么这份值得单列**：它和本报告是**两条独立路径**——它偏固件/运行时侧，我们偏 APK 静态侧——却落到同一组结论。这种交叉印证，比任何单方论证都硬。唯一需要并轨的是第 3 条的第三档唤醒周期，建议以后统一按"24h 设备 / 24h 应用 / 12h 信令 / 30min 触发"表述，并注明机型可能存在 1h 变体。
+
+**未在本工作区复现的部分**：该文的 `fraud_detection_data.db` 表结构、风险分权重表、`clip_*.tmp` 上传路径，均属 `com.miui.securitycenter` 与 `com.miui.guardprovider`。本仓库没有这两个包的样本，**仅作交叉参考，不并入 SystemHelper 结论**（同 §13）。
+
+---
+
+## 13. 边界声明
+
+- 本地结论均可用文内 `文件:行号` 复核；源码位于 `jadx_out/sources`（1.2）、`jadx_v301/sources`（3.0.1）、`jadx_v4/sources`（4.0）。
+- 本帖 ④⑤ 涉及的两个组件本工作区无样本，**不并入 SystemHelper 的结论**；如需定性，须单独取 `com.miui.guardprovider` 与 `com.miui.securitycenter` 做同等级别反编译比对。
+- 帖子的 ⑦ 属法域与第三方研究范畴，本报告不做背书。
+- 第四来源（§11）是 AIGC 聚合稿，第五来源（§12）是第三方独立核验；两者**只核验其中的事实断言**，其关于 `com.miui.securitycenter` / `com.miui.guardprovider` 的实现细节本工作区未复现，不作背书。
 
 ---
 

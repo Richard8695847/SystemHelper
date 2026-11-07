@@ -108,7 +108,7 @@ HTTPS fail by cert invalid, trigger HTTP fallback!
 | 03 | [3.0.1 对比分析](docs/03-compare-3.0.1.md) | 签名换小米、全量混淆、百度定位 SDK、`SigInfo` 路测字段、`MSISDN` 归零 |
 | 04 | [4.0.0 对比分析](docs/04-compare-4.0.0.md) | 三版横向、四项真实加固、蓝牙与卫星扩张、设计意图分析（事实层 / 推断层分离） |
 | 05 | [CU-DMS 上报协议分析](docs/05-cudms-protocol.md) | 49 字段字典 + 敏感度分级、客户端四缺陷、加固建议 |
-| 06 | [外部传闻逐条核验](docs/06-rumor-verification.md) | 对日文帖与两份中文来源的核验：哪些成立、哪些归因错位；附三版差异速查 |
+| 06 | [多处原帖逐条核验](docs/06-rumor-verification.md) | 五方来源（日文帖 / C114 / 中文评论 / 什么值得买聚合稿 / 技术 Gist）逐条比代码：哪些成立、哪些归因错位；附三版差异速查 |
 | — | [IOC 清单](docs/iocs.txt) | 端点、URL、组件、哈希、签名指纹，可导入 NetGuard / RethinkDNS / 路由器 / EDR |
 | — | [证据附件](evidence/) | 公开证书与公钥 + 大小/哈希清单 |
 | — | [tools/](tools/) | 两个 PowerShell 脚本：`kill_systemhelper.ps1`（停用/撤权/清数据/黑洞域名）、`dump_evidence.ps1`（取证并解码本机缓存的上报记录） |
