@@ -30,28 +30,13 @@
 
 ```mermaid
 flowchart LR
-  subgraph T["トリガー"]
-    A1["起動 +4min"]:::t
-    A2["SIM 変更"]:::t
-    A3["ネット接続"]:::t
-    A4["アラーム 24h / 60min / 30min"]:::t
-    A5["アプリ変更"]:::t
-  end
-
-  subgraph C["収集"]
-    D1["端末識別<br/>IMEI · IMSI · ICCID · MSISDN"]
-    D2["位置と無線<br/>TAC · CID · PCI · 緯度経度 · BSSID"]
-    D3["行動<br/>アプリ一覧 · 前面時間 · SIM 別通信量"]
-    D4["関係と能力<br/>BT ペアリング · 衛星フラグ"]
-  end
-
-  T --> C
-  C --> E["49 フィールドの JSON"]
-  E --> F["key = SHA256(json)<br/>body = AES-256-GCM"]
-  F --> G["POST dm.wo.com.cn<br/>:18081 HTTPS / :18080 平文フォールバック"]
-  G --> H[("Unicom DM 基盤")]
-
-  classDef t fill:#fff3cd,stroke:#d39e00,color:#000;
+  A["トリガー<br/>起動 +4min · SIM 変更 · ネット接続<br/>アラーム 24h / 60min / 30min · アプリ変更"]
+  B["収集<br/>識別：IMEI · IMSI · ICCID · MSISDN<br/>位置：TAC · CID · PCI · 緯度経度 · BSSID<br/>行動：アプリ一覧 · 前面時間 · SIM 別通信量<br/>関係：BT ペアリング · 衛星フラグ"]
+  C["整形<br/>49 フィールド JSON"]
+  D["暗号化<br/>key = SHA256(json)<br/>body = AES-256-GCM"]
+  E["送信<br/>POST dm.wo.com.cn<br/>:18081 HTTPS / :18080 平文フォールバック"]
+  F["Unicom DM 基盤"]
+  A --> B --> C --> D --> E --> F
 ```
 
 1.2 で見つかった他の 4 経路（`/public/ip`、`:6002/getRegisterLog`、BONC の SOAP、`cnc-labs.eicp.net`）はいずれもデッドコードです（[02-api-protocol.md](../docs/02-api-protocol.md)）。

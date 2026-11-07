@@ -30,28 +30,13 @@
 
 ```mermaid
 flowchart LR
-  subgraph T["觸發"]
-    A1["開機 +4min"]:::t
-    A2["換卡 / SIM 狀態"]:::t
-    A3["連網"]:::t
-    A4["定時 24h / 60min / 30min"]:::t
-    A5["應用安裝變化"]:::t
-  end
-
-  subgraph C["採集"]
-    D1["裝置身分<br/>IMEI · IMSI · ICCID · MSISDN"]
-    D2["位置與網路<br/>TAC · CID · PCI · 經緯度 · BSSID"]
-    D3["行為<br/>應用清單 · 前景時長 · 分卡流量"]
-    D4["關係與能力<br/>藍牙配對 · 衛星開關"]
-  end
-
-  T --> C
-  C --> E["組包：49 欄位 JSON"]
-  E --> F["key = SHA256(json)<br/>body = AES-256-GCM"]
-  F --> G["POST dm.wo.com.cn<br/>:18081 HTTPS / :18080 明文回退"]
-  G --> H[("聯通 DM 平台")]
-
-  classDef t fill:#fff3cd,stroke:#d39e00,color:#000;
+  A["觸發<br/>開機 +4min · 換卡 · 連網<br/>定時 24h / 60min / 30min · 應用安裝變化"]
+  B["採集<br/>身分：IMEI · IMSI · ICCID · MSISDN<br/>位置：TAC · CID · PCI · 經緯度 · BSSID<br/>行為：應用清單 · 前景時長 · 分卡流量<br/>關係：藍牙配對 · 衛星開關"]
+  C["組包<br/>49 欄位 JSON"]
+  D["加密<br/>key = SHA256(json)<br/>body = AES-256-GCM"]
+  E["傳送<br/>POST dm.wo.com.cn<br/>:18081 HTTPS / :18080 明文回退"]
+  F["聯通 DM 平台"]
+  A --> B --> C --> D --> E --> F
 ```
 
 另外四條外發鏈路（`/public/ip`、`:6002/getRegisterLog`、BONC SOAP、花生殼 `cnc-labs.eicp.net`）在 1.2 中都是死程式碼，詳見 [02-api-protocol.md](../docs/02-api-protocol.md)。

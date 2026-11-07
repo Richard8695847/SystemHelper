@@ -30,28 +30,13 @@ This repository contains static-analysis results for three versions (1.2 / 3.0.1
 
 ```mermaid
 flowchart LR
-  subgraph T["Triggers"]
-    A1["boot +4min"]:::t
-    A2["SIM change"]:::t
-    A3["network up"]:::t
-    A4["alarms 24h / 60min / 30min"]:::t
-    A5["app install change"]:::t
-  end
-
-  subgraph C["Collection"]
-    D1["Device identity<br/>IMEI · IMSI · ICCID · MSISDN"]
-    D2["Location & radio<br/>TAC · CID · PCI · lat/lon · BSSID"]
-    D3["Behaviour<br/>app list · foreground time · per-SIM traffic"]
-    D4["Relations & capability<br/>paired BT devices · satellite flags"]
-  end
-
-  T --> C
-  C --> E["49-field JSON"]
-  E --> F["key = SHA256(json)<br/>body = AES-256-GCM"]
-  F --> G["POST dm.wo.com.cn<br/>:18081 HTTPS / :18080 cleartext fallback"]
-  G --> H[("Unicom DM platform")]
-
-  classDef t fill:#fff3cd,stroke:#d39e00,color:#000;
+  A["Triggers<br/>boot +4min · SIM change · network up<br/>alarms 24h / 60min / 30min · app install change"]
+  B["Collection<br/>identity: IMEI · IMSI · ICCID · MSISDN<br/>location: TAC · CID · PCI · lat/lon · BSSID<br/>behaviour: app list · foreground time · per-SIM traffic<br/>relations: paired BT devices · satellite flags"]
+  C["Pack<br/>49-field JSON"]
+  D["Encrypt<br/>key = SHA256(json)<br/>body = AES-256-GCM"]
+  E["Send<br/>POST dm.wo.com.cn<br/>:18081 HTTPS / :18080 cleartext fallback"]
+  F["Unicom DM platform"]
+  A --> B --> C --> D --> E --> F
 ```
 
 The other four network endpoints found in 1.2 (`/public/ip`, `:6002/getRegisterLog`, the BONC SOAP service, and the `cnc-labs.eicp.net` dynamic-DNS host) are dead code — see [02-api-protocol.md](../docs/02-api-protocol.md).
