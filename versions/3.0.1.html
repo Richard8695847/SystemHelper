@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SystemHelper 3.0.1（20260313）· 对比分析</title>
+<meta name="description" content="SystemHelper 3.0.1-20260313 分析：签名换成小米平台密钥、全量混淆、接入百度定位 SDK、新增 SigInfo 路测字段、删除手机号。">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230a0e13'/><circle cx='16' cy='16' r='6' fill='%23f0b429'/></svg>">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap bar">
+    <a class="brand" href="../index.html"><span class="dot"></span>SystemHelper</a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-label="菜单">菜单</button>
+    <nav class="main">
+      <a href="../index.html">总览</a>
+      <a href="1.2.html">1.2</a>
+      <a href="3.0.1.html" class="active">3.0.1</a>
+      <a href="4.0.0.html">4.0.0</a>
+      <a href="../webadb.html">网页 ADB</a>
+      <a href="../index.html#reports">报告</a>
+      <a href="https://github.com/Richard8695847/SystemHelper">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap vhead">
+  <div class="vbadge">v3.0.1-20260313 · versionCode 34</div>
+  <h1>藏起来，<span class="hl">然后采得更多</span></h1>
+  <p class="lede">代码从 408 个可读类压成单字母包，签名主体从联通换成小米平台密钥，同时接入百度定位 SDK、新增 <code>SigInfo</code> 路测字段、采集频率提高约 7 倍、加入 0–24 小时随机抖动。</p>
+  <div class="meta-grid">
+    <div><div class="k">文件大小</div><div class="v">3,831,041 B / 410 条目</div></div>
+    <div><div class="k">classes.dex</div><div class="v">1,283,720 B（-52%）</div></div>
+    <div><div class="k">minSdk / targetSdk</div><div class="v">31 / 34</div></div>
+    <div><div class="k">原生库</div><div class="v">liblocSDK8b.so · libindoor.so</div></div>
+    <div><div class="k">签名</div><div class="v">CN=MIUI, O=Xiaomi</div></div>
+    <div><div class="k">版本门</div><div class="v">ver=5.0</div></div>
+    <div><div class="k">MNC 白名单</div><div class="v">46001 / 46006 / 46009 / 46010</div></div>
+    <div><div class="k">厂商适配器</div><div class="v">12 家（首次去掉 HUAWEI）</div></div>
+  </div>
+</div>
+
+<nav class="anchor-nav"><div class="wrap" style="display:flex;flex-wrap:wrap;gap:8px">
+  <a href="#change">最大的变化</a><a href="#new">新增采集</a><a href="#channel">链路</a>
+  <a href="#anti">反诈结论</a><a href="#check">自查与处置</a><a href="#sample">样本</a>
+</div></nav>
+
+<section id="change">
+  <div class="wrap">
+    <h2><span class="num">01</span>三个结构性变化</h2>
+
+    <div class="grid three">
+      <div class="card">
+        <div class="kicker">签名</div>
+        <h3>换成小米平台密钥</h3>
+        <p><code>CN=MIUI, O=Xiaomi</code>。这意味着它成为<strong>由小米签名、随 ROM 分发的系统级组件</strong>，不再是联通自己塞进去的第三方 APK。系统层面的卸载难度随之上升。</p>
+      </div>
+      <div class="card">
+        <div class="kicker">代码</div>
+        <h3>全量混淆</h3>
+        <p>1.2 的 <code>DeviceInfo</code>、<code>DeviceManager</code>、58 个厂商适配器全部消失，被压进 <code>a0/a1/b/b1/c0/e1/f1/g0/g1/i</code>。连 JSON 键名都要靠 <code>const-string</code> 还原。</p>
+      </div>
+      <div class="card">
+        <div class="kicker">能力</div>
+        <h3>接入百度定位 SDK</h3>
+        <p>新增 <code>liblocSDK8b.so</code>（368 KB）+ <code>libindoor.so</code>（1.6 MB），带百度 LBS API Key，做连续 GPS 定位、室内定位与 WiFi 指纹。</p>
+      </div>
+    </div>
+
+    <div class="callout info" style="margin-top:20px">
+      <strong>一句话：</strong> 采集重心从“设备注册”转向<strong>网络质量路测</strong>——新增的 <code>SigInfo</code> 报文里有 TAC/CID/PCI/ARFCN/Bands/CQI/RSRP/RSRQ/SINR、上下行速率、掉话原因、数据失败原因、EPS Fallback、经纬度、海拔、区县、速度、方位角、BSSID、SSID。
+    </div>
+  </div>
+</section>
+
+<section id="new">
+  <div class="wrap">
+    <h2><span class="num">02</span>新增 / 删除 / 提速</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>方向</th><th>内容</th><th>影响</th></tr></thead>
+        <tbody>
+          <tr><td class="warn">新增</td><td><code>SigInfo</code> 信令快照，30 分钟一次</td><td>精确位置 + 无线环境画像</td></tr>
+          <tr><td class="warn">新增</td><td>百度定位 SDK（21 个百度地图/定位域名）</td><td>室内外连续定位</td></tr>
+          <tr><td class="warn">提速</td><td>应用清单 7 天 → 24 小时</td><td>采集频率 ×7</td></tr>
+          <tr><td class="warn">新增</td><td>0–24 小时随机抖动（<code>new Random().nextInt(86400000)</code>）</td><td>规避周期分析</td></tr>
+          <tr><td class="ok">删除</td><td><code>MSISDN</code> 引用 6 处 → 0，<code>getLine1Number()</code> 4 处 → 0</td><td>明确的合规收敛</td></tr>
+          <tr><td class="warn">收紧</td><td>本地队列 100 条 → 10 条，<strong>先删后发</strong></td><td>减少本地取证痕迹</td></tr>
+          <tr><td class="warn">收紧</td><td>MCC 门：MNC 必须以 <code>460</code> 开头</td><td>但异常路径直接 <code>return TRUE</code>，门可失效</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout bad">
+      <strong>“先删后发”值得单独看：</strong> <code>HistoryPostThread</code> 每次取最新一条、发送前先删除。这意味着即使事后检查设备，也几乎抓不到待发内容——它主动抹掉了本地痕迹。
+    </div>
+  </div>
+</section>
+
+<section id="channel">
+  <div class="wrap">
+    <h2><span class="num">03</span>链路：一行没改</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>项</th><th>3.0.1</th><th>与 1.2 对比</th></tr></thead>
+        <tbody>
+          <tr><td>端点</td><td><code>http://dm.wo.com.cn:18080/register?ver=5.0</code></td><td>路径从 <code>/registerv3</code> 改为 <code>/register</code></td></tr>
+          <tr><td>对称加密</td><td>AES-ECB，密钥 = MD5 明文</td><td class="no">未改</td></tr>
+          <tr><td>签名</td><td><code>sign = Base64(RSA_pub(...))</code></td><td class="no">未改</td></tr>
+          <tr><td>传输</td><td>明文 HTTP</td><td class="no">未改</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small">协议层完全继承了 1.2 的设计缺陷；4.0.0 才换成 GCM + RSA-2048 + HTTPS。</p>
+  </div>
+</section>
+
+<section id="anti">
+  <div class="wrap">
+    <h2><span class="num">04</span>“接反诈了吗”——没有</h2>
+    <p class="sub">四个层面分别查证，全部零命中。</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>层面</th><th>检查</th><th>结果</th></tr></thead>
+        <tbody>
+          <tr><td>字符串</td><td>反诈 / 诈骗 / 公安 / 96110 / 举报 / 拦截 / 风控 / 画像 等中英文关键词</td><td class="ok">0 命中</td></tr>
+          <tr><td>原生库</td><td><code>libindoor.so</code>、<code>liblocSDK8b.so</code> 三编码扫描</td><td class="ok">0 命中</td></tr>
+          <tr><td>网络</td><td>22 个 URL：1 个 <code>dm.wo.com.cn</code> + 21 个百度地图/定位</td><td class="ok">无公安/反诈/风控域名</td></tr>
+          <tr><td>能力</td><td>读来电比对、挂断、读短信、涉诈 App 判定、风险评分、弹窗预警</td><td class="ok">一项都没有</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout">
+      <strong>但数据够不够做反诈画像？够。</strong> 精确位置 + 基站 + WiFi BSSID + 应用清单 + 掉话原因，恰好是画像系统的理想输入。<strong>这是能力问题，不是功能问题</strong>——客户端不判定，不代表上游不画像。
+    </div>
+  </div>
+</section>
+
+<section id="check">
+  <div class="wrap">
+    <h2><span class="num">05</span>自查与处置</h2>
+<pre><code># 版本（注意：同版本号可能对应不同 OEM 批次的重打包）
+adb shell dumpsys package com.mobiletools.systemhelper | grep versionName
+
+# 它是否在跑、有无待触发闹钟
+adb shell ps -A | grep systemhelper
+adb shell dumpsys alarm | grep systemhelper
+
+# 停用 + 撤权限（对平台签名组件，停用可能被系统拒绝）
+adb shell pm disable-user --user 0 com.mobiletools.systemhelper
+adb shell pm revoke com.mobiletools.systemhelper android.permission.READ_PHONE_STATE
+adb shell pm revoke com.mobiletools.systemhelper android.permission.ACCESS_FINE_LOCATION
+
+# 网络层拦截——对平台签名组件同样有效，是唯一不依赖系统授权的手段
+0.0.0.0 dm.wo.com.cn</code></pre>
+
+    <div class="callout ok">
+      <strong>关键判断：</strong> 3.0.1 起组件用小米平台密钥签名，<code>am force-stop</code> 或 <code>pm disable</code> 可能被系统策略拒绝。<strong>封域名最稳</strong>——一次覆盖 <code>:18080</code>。
+    </div>
+  </div>
+</section>
+
+<section id="sample">
+  <div class="wrap">
+    <h2><span class="num">06</span>样本</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>项</th><th>值</th></tr></thead>
+        <tbody>
+          <tr><td>SHA-256</td><td><code style="white-space:normal">1de8d965e295db27e189aa179cdb45438d7f759cffbb43ce55f840b614ff6c65</code></td></tr>
+          <tr><td>MD5</td><td><code>9b68bd6b627a0e35b158a86e25ed9dc8</code></td></tr>
+          <tr><td>大小</td><td>3,831,041 B</td></tr>
+          <tr><td>外部观察</td><td>同 <code>versionName</code> 存在按 OEM/批次重打的多个构建（如 vivo 机型上的 <code>3.0.1-20251230</code>），仅凭版本号判行为会出错</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout info">
+      <strong>仓库不托管 APK。</strong> 从自己的设备提取：
+<pre style="margin-top:10px"><code>adb shell pm path com.mobiletools.systemhelper
+adb pull /system/priv-app/SystemHelper/SystemHelper.apk</code></pre>
+      取到后按上表 SHA-256 校验，能确认是不是同一份构建。
+    </div>
+  </div>
+</section>
+
+<footer class="site">
+  <div class="wrap">
+    <nav>
+      <a href="../index.html">总览</a><a href="1.2.html">1.2</a><a href="3.0.1.html">3.0.1</a><a href="4.0.0.html">4.0.0</a>
+      <a href="../webadb.html">网页 ADB</a>
+      <a href="https://github.com/Richard8695847/SystemHelper">源码仓库</a>
+    </nav>
+    <p>© <span data-year>2026</span> SystemHelper 研究集 · CC BY 4.0</p>
+  </div>
+</footer>
+
+<script src="../assets/site.js"></script>
+</body>
+</html>

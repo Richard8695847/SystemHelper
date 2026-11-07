@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>网页里能调用 ADB 吗？· SystemHelper</title>
+<meta name="description" content="浏览器不能直接运行 adb。可行的三条路：WebUSB + ya-webadb（桌面 Chrome/Edge）、本地 adb 命令、设备端 Termux。附三版本命令生成器。">
+<link rel="stylesheet" href="assets/site.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230a0e13'/><circle cx='16' cy='16' r='6' fill='%23f0b429'/></svg>">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap bar">
+    <a class="brand" href="index.html"><span class="dot"></span>SystemHelper</a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-label="菜单">菜单</button>
+    <nav class="main">
+      <a href="index.html">总览</a>
+      <a href="versions/1.2.html">1.2</a>
+      <a href="versions/3.0.1.html">3.0.1</a>
+      <a href="versions/4.0.0.html">4.0.0</a>
+      <a href="webadb.html" class="active">网页 ADB</a>
+      <a href="index.html#reports">报告</a>
+      <a href="https://github.com/Richard8695847/SystemHelper">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap hero">
+  <div class="eyebrow">WebUSB · ADB · 可行性</div>
+  <h1>网页能调用 <span class="hl">ADB</span> 吗？<br>能，但只有一种方式，而且限制很多。</h1>
+  <p class="lede">
+    直接回答：<strong>网页不能运行 <code>adb</code> 这个程序</strong>，也不能访问你电脑上的 Android SDK。
+    但浏览器有一条 <strong>WebUSB</strong> 通道，可以直连手机的 <code>adbd</code> 守护进程——这就是 <code>ya-webadb</code> 做的事。
+    下面把边界说清楚，再给你一个不用装任何东西的命令生成器。
+  </p>
+  <div class="actions">
+    <a class="btn primary" href="#verdict">先看结论表</a>
+    <a class="btn" href="#gen">直接生成命令</a>
+  </div>
+</div>
+
+<section id="verdict">
+  <div class="wrap">
+    <h2><span class="num">01</span>能做到 / 做不到</h2>
+    <p class="sub">这张表决定了下一条路怎么选。</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>能力</th><th>纯网页</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td>执行任意 <code>adb shell</code> 命令</td><td class="warn">部分</td><td>WebUSB + ADB 协议实现（<code>ya-webadb</code>）可以，但仅限支持 WebUSB 的浏览器</td></tr>
+          <tr><td>读取 <code>dumpsys</code> / <code>appops</code> / <code>pm list</code></td><td class="ok">可以</td><td>这些是普通 shell 权限，接口直接返回文本</td></tr>
+          <tr><td>截屏、拉取 <code>/sdcard</code> 文件</td><td class="ok">可以</td><td>同步协议 + 流式传输</td></tr>
+          <tr><td>拉取 <code>/system/priv-app</code> 里的 APK</td><td class="no">不行</td><td>需要 root；非 root 下该路径不可读</td></tr>
+          <tr><td><code>pm disable-user</code> 平台签名组件</td><td class="warn">多半失败</td><td>系统策略会拒绝，返回 <code>SecurityException</code></td></tr>
+          <tr><td>安装 <code>priv-app</code> 副本</td><td class="no">无意义</td><td>侧载后拿不到平台签名权限，装上也是空壳</td></tr>
+          <tr><td>在手机上用（iOS / Android 浏览器）</td><td class="no">不行</td><td>移动端浏览器不提供 WebUSB</td></tr>
+          <tr><td>Firefox / Safari</td><td class="no">不行</td><td>两者都不实现 WebUSB</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout info">
+      <strong>一句技术解释：</strong> <code>adb</code> 不是一个“接口”，而是一个<strong>主机端程序</strong>——它用 ADB 协议（USB 上是一组 vendor-specific 端点，TCP 上是 5037 端口的服务协议）跟设备里的 <code>adbd</code> 通信。
+      网页拿不到本机进程，唯一能做的就是用 WebUSB <strong>自己实现这套协议</strong>。能做到，但那等于在浏览器里重写一个 adb 客户端。
+    </div>
+  </div>
+</section>
+
+<section id="gen">
+  <div class="wrap">
+    <h2><span class="num">02</span>命令生成器（离线可用，零依赖）</h2>
+    <p class="sub">选版本 → 得到一组可以直接粘进终端或 WebUSB 控制台的命令。这条路径不需要任何授权弹窗。</p>
+
+    <div class="card" style="margin-bottom:18px">
+      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+        <label for="ver" style="font-size:14px;color:var(--muted)">目标版本</label>
+        <select id="ver" style="background:var(--panel-2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:9px 12px;font-family:var(--mono);font-size:14px">
+          <option value="1.2">1.2-20220907</option>
+          <option value="3.0.1">3.0.1-20260313</option>
+          <option value="4.0.0" selected>4.0.0-20260910</option>
+        </select>
+        <label for="mode" style="font-size:14px;color:var(--muted);margin-left:8px">场景</label>
+        <select id="mode" style="background:var(--panel-2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:9px 12px;font-family:var(--mono);font-size:14px">
+          <option value="check" selected>只检查（不改动设备）</option>
+          <option value="harden">处置（停用 + 撤权限）</option>
+          <option value="evidence">取证（拉本地数据库）</option>
+        </select>
+      </div>
+    </div>
+
+<pre id="out"><code>（选择版本后自动生成）</code></pre>
+
+    <div class="callout">
+      <strong>说明：</strong> 生成的是 <code>adb shell</code> 形式的命令。若你用的是 WebUSB 方案，把每条去掉 <code>adb shell</code> 前缀，作为 shell 字符串交给 ADB 连接对象即可。
+    </div>
+  </div>
+</section>
+
+<section id="paths">
+  <div class="wrap">
+    <h2><span class="num">03</span>三条可选路径</h2>
+
+    <div class="grid three">
+      <div class="card">
+        <div class="kicker">路径 A · 推荐</div>
+        <h3>本地 adb</h3>
+        <p>最稳。装 Android Platform Tools，一条 USB 线，上面生成的命令直接可用。</p>
+        <p class="small" style="margin-top:10px">支持：Windows / macOS / Linux</p>
+      </div>
+      <div class="card">
+        <div class="kicker">路径 B · 纯网页</div>
+        <h3>WebUSB + ya-webadb</h3>
+        <p>桌面 Chrome / Edge，开启「USB 调试」，页面通过 WebUSB 直连 <code>adbd</code>。无插件、无驱动之外的东西。</p>
+        <p class="small" style="margin-top:10px">限制：桌面 Chromium、单设备、需用户手势授权</p>
+      </div>
+      <div class="card">
+        <div class="kicker">路径 C · 无电脑</div>
+        <h3>设备端 Termux</h3>
+        <p>手机装 Termux + <code>android-tools</code>，本机自连 <code>127.0.0.1:5555</code>。适合只想在自己手机上查。</p>
+        <p class="small" style="margin-top:10px">需先 <code>adb tcpip 5555</code>（通常要 root 或一次电脑连接）</p>
+      </div>
+    </div>
+
+    <h3>如果要在自己的页面里接 WebUSB</h3>
+    <p class="sub" style="margin-bottom:12px">这条路要引入 <code>@yume-chan/adb</code> 及其 WebUSB 适配层（MIT 许可）。示意代码，<strong>未随本站打包</strong>，需你自行 <code>npm i</code> 或走 CDN：</p>
+<pre><code>import { Adb, AdbDaemonTransport } from "@yume-chan/adb";
+import { AdbWebUsbBackend } from "@yume-chan/adb-backend-webusb";
+
+// 1) 必须在用户点击事件里调用（浏览器要求手势）
+const device = await navigator.usb.requestDevice({
+  filters: [{ classCode: 0xff, subclassCode: 0x42, protocolCode: 0x01 }],
+});
+
+// 2) 建立 ADB 连接
+const connection = await AdbWebUsbBackend.fromDevice(device);
+const adb = new Adb(new AdbDaemonTransport({ connection }));
+await adb.connect();                       // 设备端会弹出「允许 USB 调试」
+
+// 3) 跑命令
+const result = await adb.subprocess.noneProtocol.spawnWaitText(
+  "dumpsys package com.mobiletools.systemhelper | grep versionName"
+);
+console.log(result);</code></pre>
+
+    <div class="callout bad">
+      <strong>三个必须知道的坑：</strong>
+      ① 同一时刻只能有一个 adb 服务持有设备，先把本机的 <code>adb kill-server</code> 停掉；
+      ② 只在你自己的设备上用，握手时手机上会弹「允许 USB 调试」，别对陌生机器点允许；
+      ③ 页面必须跑在 <code>https://</code> 或 <code>localhost</code> 下，WebUSB 才可用——GitHub Pages 满足这一点。
+    </div>
+  </div>
+</section>
+
+<section id="why">
+  <div class="wrap">
+    <h2><span class="num">04</span>为什么本站没有内置 WebUSB 客户端</h2>
+    <ul class="clean">
+      <li><strong>体积与维护。</strong> 一个完整的 ADB 实现要几百 KB 并按设备能力分叉，塞进一个静态站不划算。</li>
+      <li><strong>安全边界。</strong> 这类页面天然会请求「连接你的手机」。一个研究项目的主页不该顺手拥有这种能力——你需要它时，用上面路径 A/B/C 单独去做。</li>
+      <li><strong>它解决不了核心问题。</strong> 你想知道「它在不在、发不发」，本地 <code>dumpsys</code> 加一次抓包就够了，不需要浏览器。</li>
+    </ul>
+
+    <div class="callout ok">
+      <strong>最省事的自查（一行）：</strong>
+<pre style="margin-top:10px"><code>adb shell dumpsys package com.mobiletools.systemhelper | grep -E "versionName|versionCode"</code></pre>
+      有输出 = 装在你机器上；没有输出 = 没有这个包。
+    </div>
+  </div>
+</section>
+
+<footer class="site">
+  <div class="wrap">
+    <nav>
+      <a href="index.html">总览</a><a href="versions/1.2.html">1.2</a><a href="versions/3.0.1.html">3.0.1</a><a href="versions/4.0.0.html">4.0.0</a>
+      <a href="https://github.com/Richard8695847/SystemHelper">源码仓库</a>
+    </nav>
+    <p>© <span data-year>2026</span> SystemHelper 研究集 · CC BY 4.0</p>
+  </div>
+</footer>
+
+<script src="assets/site.js"></script>
+<script>
+(function () {
+  "use strict";
+  var PKG = "com.mobiletools.systemhelper";
+  var out = document.querySelector("#out code");
+  var verSel = document.getElementById("ver");
+  var modeSel = document.getElementById("mode");
+
+  var CMDS = {
+    check: function (v) {
+      var extra = [];
+      if (v === "1.2") {
+        extra.push("# 1.2 特征：明文 HTTP :18080/registerv3，采集含手机号");
+      } else if (v === "3.0.1") {
+        extra.push("# 3.0.1 特征：ver=5.0，百度定位 SDK，app 清单 24h");
+      } else {
+        extra.push("# 4.0.0 特征：ver=6.0，HTTPS :18081，19 项权限（含 BLUETOOTH）");
+      }
+      return [
+        extra.join("\n"),
+        "",
+        "# 1) 是否存在、什么版本",
+        "adb shell dumpsys package " + PKG + " | grep -E \"versionName|versionCode\"",
+        "",
+        "# 2) 权限实际授予情况",
+        "adb shell dumpsys package " + PKG + " | grep \"granted=true\"",
+        "adb shell cmd appops get " + PKG,
+        "",
+        "# 3) 进程与服务",
+        "adb shell ps -A | grep systemhelper",
+        "adb shell dumpsys activity services " + PKG,
+        "",
+        "# 4) 待触发的闹钟（定时上报）",
+        "adb shell dumpsys alarm | grep -i systemhelper",
+        "",
+        "# 5) 是否真的在上报：另开抓包，过滤 dm.wo.com.cn"
+      ].join("\n");
+    },
+    harden: function (v) {
+      var lines = [
+        "# 先确认版本再动手",
+        "adb shell dumpsys package " + PKG + " | grep versionName",
+        "",
+        "# 停用当前用户副本（可逆，恢复出厂或 pm enable 可还原）",
+        "adb shell pm disable-user --user 0 " + PKG,
+        "",
+        "# 撤销关键权限",
+        "adb shell pm revoke " + PKG + " android.permission.READ_PHONE_STATE",
+        "adb shell pm revoke " + PKG + " android.permission.ACCESS_FINE_LOCATION"
+      ];
+      if (v === "4.0.0") {
+        lines.push("adb shell pm revoke " + PKG + " android.permission.BLUETOOTH_CONNECT");
+        lines.push("adb shell pm revoke " + PKG + " android.permission.BLUETOOTH");
+      }
+      lines.push("");
+      lines.push("# 验证是否真的停掉");
+      lines.push("adb shell dumpsys package " + PKG + " | grep -E \"enabled=|stopped=\"");
+      lines.push("");
+      lines.push("# 网络层黑洞（对平台签名组件同样有效，最可靠）");
+      lines.push("#   hosts / NetGuard 规则：0.0.0.0 dm.wo.com.cn");
+      return lines.join("\n");
+    },
+    evidence: function (v) {
+      var db = (v === "1.2") ? "history" : "dmregister";
+      return [
+        "# 表名：" + db + "（1.2 为 history，3.0.1 起为 dmregister）",
+        "",
+        "# 1) 应用私有目录是否可读（多数机型需 root 或 run-as）",
+        "adb shell run-as " + PKG + " ls -l databases",
+        "",
+        "# 2) 拉出数据库",
+        "adb exec-out run-as " + PKG + " cat databases/systemhelper > systemhelper.db",
+        "",
+        "# 3) 看队列里还剩多少条（3.0.1 起上限 10，读完即删）",
+        "sqlite3 systemhelper.db \"select count(*) from " + db + ";\"",
+        "",
+        "# 4) 有 root 时可直接拉整个目录",
+        "adb shell su -c \"tar -c /data/data/" + PKG + "\" > sh.tar"
+      ].join("\n");
+    }
+  };
+
+  function render() {
+    var v = verSel.value;
+    var m = modeSel.value;
+    out.textContent = CMDS[m](v);
+  }
+  verSel.addEventListener("change", render);
+  modeSel.addEventListener("change", render);
+  render();
+})();
+</script>
+</body>
+</html>

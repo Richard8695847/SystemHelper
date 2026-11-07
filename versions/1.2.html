@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SystemHelper 1.2（20220907）· 逆向分析</title>
+<meta name="description" content="SystemHelper 1.2-20220907 静态分析：明文 HTTP、AES-ECB + MD5 密钥、RSA-1024、58 家厂商适配器、采集手机号。">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230a0e13'/><circle cx='16' cy='16' r='6' fill='%23f0b429'/></svg>">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap bar">
+    <a class="brand" href="../index.html"><span class="dot"></span>SystemHelper</a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-label="菜单">菜单</button>
+    <nav class="main">
+      <a href="../index.html">总览</a>
+      <a href="1.2.html" class="active">1.2</a>
+      <a href="3.0.1.html">3.0.1</a>
+      <a href="4.0.0.html">4.0.0</a>
+      <a href="../webadb.html">网页 ADB</a>
+      <a href="../index.html#reports">报告</a>
+      <a href="https://github.com/Richard8695847/SystemHelper">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap vhead">
+  <div class="vbadge">v1.2-20220907 · versionCode 3</div>
+  <h1>草稿态的一代：<span class="hl">能跑就行</span></h1>
+  <p class="lede">可读的 408 个类、58 家厂商适配器、明文 HTTP、AES-ECB 且密钥就是报文自身的 MD5、RSA-1024、采集手机号、花生壳调试域名还留在包里。</p>
+  <div class="meta-grid">
+    <div><div class="k">文件大小</div><div class="v">1,685,429 B / 408 条目</div></div>
+    <div><div class="k">classes.dex</div><div class="v">2,662,204 B</div></div>
+    <div><div class="k">minSdk / targetSdk</div><div class="v">24 / 33</div></div>
+    <div><div class="k">原生库</div><div class="v">无</div></div>
+    <div><div class="k">签名</div><div class="v">CN=NewDM, OU=RI, O=CU</div></div>
+    <div><div class="k">证书有效期</div><div class="v">2019-03-21 → 2069-03-08</div></div>
+    <div><div class="k">sharedUserId</div><div class="v">com.mobiletools.systemhelper.uid</div></div>
+    <div><div class="k">包名</div><div class="v">com.mobiletools.systemhelper</div></div>
+  </div>
+</div>
+
+<nav class="anchor-nav"><div class="wrap" style="display:flex;flex-wrap:wrap;gap:8px">
+  <a href="#profile">档案</a><a href="#collect">采了什么</a><a href="#trigger">触发时序</a>
+  <a href="#channel">链路与加密</a><a href="#issues">这一版的问题</a><a href="#check">自查与处置</a><a href="#sample">样本</a>
+</div></nav>
+
+<section id="profile">
+  <div class="wrap">
+    <h2><span class="num">01</span>它是谁</h2>
+    <p class="sub">不是应用商店里的 App，而是出厂镜像里的采集模块。</p>
+    <ul class="clean">
+      <li><strong>权限暴露了安装位置。</strong> <code>READ_PRIVILEGED_PHONE_STATE</code> 只有 <code>priv-app</code> 或平台签名的应用能拿到；<code>PACKAGE_USAGE_STATS</code>、<code>QUERY_ALL_PACKAGES</code> 用来读应用清单。</li>
+      <li><strong>零界面。</strong> 全包唯一的 Activity 是 <code>TestActivity</code>（调试页），没有设置页、没有开关、没有隐私弹窗。</li>
+      <li><strong>签名是联通自签证书。</strong> <code>CN=NewDM, OU=RI, O=CU, L=BJ, ST=BJ, C=86</code>，有效期 50 年——典型的内部自签调试证书，不是发布证书。</li>
+      <li><strong>四类组件在跑。</strong> <code>OnBootReceiver</code>、<code>SIMStateReceiver</code>、<code>ConnectStateReceiver</code>、<code>ScheduleRegisterReceiver</code>，加上 <code>RegisterJobService</code> 保活。</li>
+    </ul>
+  </div>
+</section>
+
+<section id="collect">
+  <div class="wrap">
+    <h2><span class="num">02</span>采了什么</h2>
+    <p class="sub">注册只需要 IMEI + ICCID + MNC + 机型 + 制式。它采的远不止这些。</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>类别</th><th>字段</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td>设备身份</td><td><code>IMEI1/2</code> <code>IMSI1/2</code> <code>ICCID1/2</code> <code>MSISDN1/2</code></td><td class="no">含手机号（3.0.1 起删除）</td></tr>
+          <tr><td>网络</td><td><code>MNC</code> <code>NCLS</code> <code>CellID</code> <code>LAC</code> <code>VolteEnabled</code> <code>5GEnabled</code></td><td>基站与制式状态</td></tr>
+          <tr><td>位置</td><td><code>SignalInfo</code> 内的经纬度</td><td class="no">GPS 派生</td></tr>
+          <tr><td>应用</td><td><code>AppInfo</code>：包名、名称、前台时长、启动次数、分卡/分 WiFi 上下行流量</td><td class="no">周期 7 天</td></tr>
+          <tr><td>设备画像</td><td><code>Manuf</code> <code>Model</code> <code>HWVersion</code> <code>SWVersion</code> <code>OS</code> <code>OSVersion</code></td><td>机型指纹</td></tr>
+          <tr><td>历史</td><td><code>History</code></td><td class="warn">一次最多补交 100 条旧报文</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout bad">
+      <strong>手机号这一项要单独说：</strong> 1.2 通过 <code>getLine1Number()</code> 读 <code>MSISDN</code>。实名制下这直接把设备标识与自然人绑定。3.0.1 把 6 处引用删到 0——这是三版里最明确的一次合规收敛。
+    </div>
+  </div>
+</section>
+
+<section id="trigger">
+  <div class="wrap">
+    <h2><span class="num">03</span>什么时候动手</h2>
+    <div class="flow">
+      <div class="flow-node"><div class="t">开机</div><div class="d">BOOT_COMPLETED<br>延迟约 4 分钟</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="t">换卡</div><div class="d">SIM_STATE_CHANGED</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="t">联网</div><div class="d">CONNECTIVITY_CHANGE</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="t">定时</div><div class="d">AlarmManager<br>失败入队重试</div></div>
+    </div>
+
+    <div class="callout bad" style="margin-top:18px">
+      <strong>1.2 没有 MCC 门。</strong> 蜂窝分支才校验联通 MNC；<strong>WiFi 分支完全不校验 SIM</strong>——插境外卡 + 连 WiFi 照样上报。这条差异在 3.0.1 才被补上（<code>isChinaNetwork()</code> 要求 MNC 以 <code>460</code> 开头，但异常路径仍 <code>return TRUE</code>）。
+    </div>
+  </div>
+</section>
+
+<section id="channel">
+  <div class="wrap">
+    <h2><span class="num">04</span>链路与加密</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>项</th><th>实现</th></tr></thead>
+        <tbody>
+          <tr><td>端点</td><td><code>POST http://dm.wo.com.cn:18080/registerv3</code>（唯一活跃接口）</td></tr>
+          <tr><td>对称加密</td><td>AES-ECB / PKCS5，<strong>16 字节密钥 = MD5(明文)</strong></td></tr>
+          <tr><td>密钥封装</td><td><code>sign = URLEncode(Base64(RSA_pub(pub.cer, key)))</code>，RSA-1024</td></tr>
+          <tr><td>传输</td><td class="no">明文 HTTP，<code>usesCleartextTraffic="true"</code></td></tr>
+          <tr><td>本地留存</td><td>明文 SQLite 最多 100 条，含 IMEI / 号码</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+<pre><code>key  = MD5(json)                    # 16B —— 密钥由明文推出，等于没有密钥
+body = AES-128-ECB(key, json)       # 无 IV、无认证
+sign = Base64(RSA_pub(pub.cer, key)) # 公钥随包分发，任何人可重算</code></pre>
+
+    <p>另有 5 条链路（<code>/public/ip</code>、<code>:6002/getRegisterLog</code>、BONC SOAP、<code>cnc-labs.eicp.net</code>、<code>webservice.chinaunicom.com</code>），交叉引用确认全部无调用点。</p>
+  </div>
+</section>
+
+<section id="issues">
+  <div class="wrap">
+    <h2><span class="num">05</span>这一版独有的问题</h2>
+    <div class="grid two">
+      <div class="card"><div class="kicker">密钥</div><h3>密钥 = 报文自身的 MD5</h3><p>拿到密文就能算出密钥，等于零加密。这是“自制加密”的典型反例。</p></div>
+      <div class="card"><div class="kicker">传输</div><h3>全程明文 HTTP</h3><p>没有 TLS，任何同网段都能读到完整 JSON。</p></div>
+      <div class="card"><div class="kicker">同意</div><h3>门关着也入库</h3><p><code>isUserPermissionOpen=false</code> 时仍 <code>insertRecord</code>；该值默认 <code>true</code>。</p></div>
+      <div class="card"><div class="kicker">供应链</div><h3>调试痕迹出厂</h3><p>花生壳动态域名 <code>cnc-labs.eicp.net</code>、50 年自签证书、<code>TestActivity</code> 都留在正式包里。</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="check">
+  <div class="wrap">
+    <h2><span class="num">06</span>自查与处置</h2>
+<pre><code># 确认版本
+adb shell dumpsys package com.mobiletools.systemhelper | grep versionName
+# 期望输出包含 1.2-20220907
+
+# 停用当前用户副本（可逆）
+adb shell pm disable-user --user 0 com.mobiletools.systemhelper
+
+# 撤销关键权限
+adb shell pm revoke com.mobiletools.systemhelper android.permission.READ_PHONE_STATE
+
+# 网络层黑洞（最有效，覆盖 :18080）
+0.0.0.0 dm.wo.com.cn</code></pre>
+    <p class="small">完整处置流程（含取证、验证清单）见 <a href="https://github.com/Richard8695847/SystemHelper/blob/main/docs/01-reverse-1.2.md">01-reverse-1.2.md</a> §11–§14。</p>
+  </div>
+</section>
+
+<section id="sample">
+  <div class="wrap">
+    <h2><span class="num">07</span>样本</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>项</th><th>值</th></tr></thead>
+        <tbody>
+          <tr><td>SHA-256</td><td><code style="white-space:normal">416d0fc0405fc19b243e72f2a7963517e5b88991a7dfac494934449969a6015d</code></td></tr>
+          <tr><td>MD5</td><td><code>8e9df43efd6d898f6db46053e69d37fb</code></td></tr>
+          <tr><td>大小</td><td>1,685,429 B</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout info">
+      <strong>仓库不托管 APK。</strong> 需要样本做静态分析时，从<strong>你自己的设备</strong>取：
+<pre style="margin-top:10px"><code>adb shell pm path com.mobiletools.systemhelper
+# 输出形如 package:/system/priv-app/SystemHelper/SystemHelper.apk
+adb pull /system/priv-app/SystemHelper/SystemHelper.apk</code></pre>
+      没有 root 时可用 <code>adb shell pm path</code> 先确认路径；<code>/system</code> 下的文件通常需要 root 或从固件包里提取。取到后按上面的 SHA-256 校验。
+    </div>
+  </div>
+</section>
+
+<footer class="site">
+  <div class="wrap">
+    <nav>
+      <a href="../index.html">总览</a><a href="1.2.html">1.2</a><a href="3.0.1.html">3.0.1</a><a href="4.0.0.html">4.0.0</a>
+      <a href="../webadb.html">网页 ADB</a>
+      <a href="https://github.com/Richard8695847/SystemHelper">源码仓库</a>
+    </nav>
+    <p>© <span data-year>2026</span> SystemHelper 研究集 · CC BY 4.0</p>
+  </div>
+</footer>
+
+<script src="../assets/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SystemHelper 4.0.0（20260910）· 对比分析</title>
+<meta name="description" content="SystemHelper 4.0.0-20260910 分析：RSA-2048、AES-256-GCM、HTTPS :18081 与明文回退、19 项权限、蓝牙配对设备与卫星通信字段。">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230a0e13'/><circle cx='16' cy='16' r='6' fill='%23f0b429'/></svg>">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap bar">
+    <a class="brand" href="../index.html"><span class="dot"></span>SystemHelper</a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-label="菜单">菜单</button>
+    <nav class="main">
+      <a href="../index.html">总览</a>
+      <a href="1.2.html">1.2</a>
+      <a href="3.0.1.html">3.0.1</a>
+      <a href="4.0.0.html" class="active">4.0.0</a>
+      <a href="../webadb.html">网页 ADB</a>
+      <a href="../index.html#reports">报告</a>
+      <a href="https://github.com/Richard8695847/SystemHelper">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap vhead">
+  <div class="vbadge">v4.0.0-20260910 · 最新分析版本</div>
+  <h1>补安全债，<span class="hl">同时再扩一环</span></h1>
+  <p class="lede">修掉了三版以来最严重的四个缺陷（RSA-2048、AES-GCM、HTTPS、组件签名权限），但采集边界又往前推了一步：蓝牙配对设备与 MAC、卫星通信能力位；并且留下了一条「证书失败就退回明文」的回退路径。</p>
+  <div class="meta-grid">
+    <div><div class="k">文件大小</div><div class="v">3,884,625 B</div></div>
+    <div><div class="k">版本门</div><div class="v">ver=6.0</div></div>
+    <div><div class="k">报文公钥</div><div class="v">cudms_main_pub.cer · RSA-2048</div></div>
+    <div><div class="k">对称加密</div><div class="v">AES-256-GCM · key = SHA256</div></div>
+    <div><div class="k">主通道</div><div class="v">https://dm.wo.com.cn:18081</div></div>
+    <div><div class="k">回退通道</div><div class="v">http://dm.wo.com.cn:18080</div></div>
+    <div><div class="k">权限数</div><div class="v">19（17 + BLUETOOTH ×2）</div></div>
+    <div><div class="k">厂商适配器</div><div class="v">13 家（无 HUAWEI/HONOR）</div></div>
+  </div>
+</div>
+
+<nav class="anchor-nav"><div class="wrap" style="display:flex;flex-wrap:wrap;gap:8px">
+  <a href="#fixed">修了什么</a><a href="#added">加了什么</a><a href="#tls">TLS 与它的后门</a>
+  <a href="#fields">字段敏感度</a><a href="#check">自查与处置</a><a href="#sample">样本</a>
+</div></nav>
+
+<section id="fixed">
+  <div class="wrap">
+    <h2><span class="num">01</span>四项真实的加固</h2>
+    <p class="sub">这四个修正是真的，应当承认。</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>缺陷</th><th>1.2 / 3.0.1</th><th>4.0.0</th></tr></thead>
+        <tbody>
+          <tr><td>上报公钥强度</td><td class="no">RSA-1024</td><td class="ok">RSA-2048（cudms_main_pub.cer）</td></tr>
+          <tr><td>对称加密</td><td class="no">AES-ECB，密钥 = MD5</td><td class="ok">AES-256-GCM，密钥 = SHA-256</td></tr>
+          <tr><td>传输协议</td><td class="no">明文 HTTP</td><td class="ok">HTTPS :18081 为主</td></tr>
+          <tr><td>组件暴露</td><td class="no">导出无保护</td><td class="ok">加 signature 级权限保护</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout ok">
+      <strong>客观地说：</strong> 这是三版里唯一一次真正的协议重构。问题在于——修完之后仍然留下了一条回退路径，以及一个语义写错的 <code>sign</code>。
+    </div>
+  </div>
+</section>
+
+<section id="added">
+  <div class="wrap">
+    <h2><span class="num">02</span>同时扩张的采集边界</h2>
+
+    <div class="grid three">
+      <div class="card">
+        <div class="kicker">新增权限</div>
+        <h3>BLUETOOTH + BLUETOOTH_CONNECT</h3>
+        <p>Android 12+ 的运行时权限，会弹窗——这是整个组件<strong>唯一一次</strong>必须向用户请求权限。</p>
+      </div>
+      <div class="card">
+        <div class="kicker">新增字段</div>
+        <h3>PairedDevice / PairedMacAddress</h3>
+        <p>上报用户连过的所有蓝牙设备：车机、手表、耳机、另一台手机。MAC 是硬件级唯一标识，可直接做社交关系图谱。</p>
+      </div>
+      <div class="card">
+        <div class="kicker">新增字段</div>
+        <h3>SatelliteSupport / SatelliteEnabled</h3>
+        <p>是否支持 / 开启卫星通信（天通、北斗短报文）。这是一个<strong>消费力分层</strong>指标，与“设备注册”毫无关系。</p>
+      </div>
+    </div>
+
+    <div class="callout bad" style="margin-top:20px">
+      <strong>注册只需要 5 个字段</strong>（IMEI、ICCID、MNC、机型、制式）。4.0 采了 49 个。仅从“注册”这个业务目的出发，蓝牙配对设备与卫星开关都无法解释。
+    </div>
+  </div>
+</section>
+
+<section id="tls">
+  <div class="wrap">
+    <h2><span class="num">03</span>TLS，以及它的后门</h2>
+    <p class="sub">这是 4.0.0 最值得单独讲的一处：加上了 HTTPS，然后自己把门留着。</p>
+
+    <h3>3.1 服务端证书是正规的</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>项</th><th>值</th></tr></thead>
+        <tbody>
+          <tr><td>subject</td><td><code>C=CN, ST=北京市, L=北京市, O=中国联合网络通信有限公司研究院, CN=dm.wo.com.cn</code></td></tr>
+          <tr><td>issuer</td><td><code>CFCA OV RSA OCA G2</code>（公共 CA，不是自签）</td></tr>
+          <tr><td>TLS</td><td>TLSv1.3 / TLS_AES_256_GCM_SHA384</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>3.2 客户端的 TrustManager 却只验有效期</h3>
+<pre><code>public void checkServerTrusted(X509Certificate[] chain, String authType) {
+    if (chain == null || chain.length == 0) throw new CertificateException("服务端证书链为空");
+    for (X509Certificate c : chain) c.checkValidity();   // ← 只看有效期，不 verify 签发者
+}</code></pre>
+    <p>没有 <code>verify()</code>、没有 pin。因此自签证书 + <code>SAN=dm.wo.com.cn</code> 即可完成中间人，客户端毫无察觉。</p>
+
+    <h3>3.3 失败即降级</h3>
+<pre><code>// e1/g.java
+if (e instanceof SSLException) { ... }
+// "HTTPS fail by cert invalid, trigger HTTP fallback!"  →  POST http://…:18080</code></pre>
+    <p>配合上一条：中间人只要让握手失败（或直接篡改），整条链路就退回明文，<code>body</code> 与 <code>sign</code> 一起裸奔。企业 WiFi、校园网、公共热点、透明代理都具备这个条件。</p>
+
+    <div class="callout bad">
+      <strong>结论：</strong> TLS 加上了，但可被任何能拦截握手的网络打回明文。<strong>“默认 TLS” 不等于 “实际 TLS”。</strong>
+    </div>
+  </div>
+</section>
+
+<section id="fields">
+  <div class="wrap">
+    <h2><span class="num">04</span>49 个字段里，哪些不该出现</h2>
+    <p class="sub">按敏感度分级，只列最高的几类。</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>字段</th><th>含义</th><th>敏感度</th><th>为什么在这</th></tr></thead>
+        <tbody>
+          <tr><td><code>SigInfo</code></td><td>信令快照：经纬度、海拔、区县、速度、方位角、BSSID、SSID、RSRP/RSRQ/SINR、掉话原因</td><td class="no">极高</td><td>精确位置 + 无线环境</td></tr>
+          <tr><td><code>AppInfo</code></td><td>应用清单 + 前台时长 + 启动次数 + 分卡/分 WiFi 流量</td><td class="no">极高</td><td>行为画像</td></tr>
+          <tr><td><code>PairedMacAddress</code></td><td>已配对蓝牙设备 MAC 串</td><td class="no">极高</td><td>硬件级唯一标识、关系图谱</td></tr>
+          <tr><td><code>IMEI1/2</code> <code>IMSI1/2</code> <code>ICCID1/2</code></td><td>设备与 SIM 标识</td><td class="no">高</td><td>设备台账（业务上正当）</td></tr>
+          <tr><td><code>BSSID</code> / <code>SSID</code></td><td>WiFi 热点标识</td><td class="no">高</td><td>室内定位到楼栋/门牌</td></tr>
+          <tr><td><code>TAC</code> <code>CID</code> <code>PCI</code></td><td>基站小区标识</td><td class="warn">高</td><td>网络优化（这条正当），但结合经纬度即精确轨迹</td></tr>
+          <tr><td><code>SatelliteEnabled</code></td><td>卫星通信开关</td><td class="warn">中</td><td>消费力分层</td></tr>
+          <tr><td><code>model</code> / <code>manuf</code></td><td>机型与厂商（<strong>明文放在 URL query</strong>）</td><td class="warn">中</td><td>抓包即知哪款手机在注册</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="check">
+  <div class="wrap">
+    <h2><span class="num">05</span>自查与处置</h2>
+<pre><code># 版本
+adb shell dumpsys package com.mobiletools.systemhelper | grep versionName
+# 期望 4.0.0-20260910
+
+# 权限（4.0 有 19 项，含 BLUETOOTH / BLUETOOTH_CONNECT）
+adb shell dumpsys package com.mobiletools.systemhelper | grep -E "granted=true|BLUETOOTH"
+
+# 是否在跑
+adb shell ps -A | grep systemhelper
+adb shell dumpsys alarm | grep systemhelper
+
+# 撤新增的蓝牙权限
+adb shell pm revoke com.mobiletools.systemhelper android.permission.BLUETOOTH_CONNECT
+
+# 停用当前用户副本
+adb shell pm disable-user --user 0 com.mobiletools.systemhelper</code></pre>
+
+<pre><code># 关键：4.0 必须同时封两个端口，光封 18080 不够
+0.0.0.0 dm.wo.com.cn      # 一条域名规则即覆盖 :18080 与 :18081</code></pre>
+
+    <div class="callout ok">
+      <strong>为什么按域名封最稳：</strong> 两条通道同域不同端口，hosts / DNS 过滤在域名层一次性覆盖；而且它对平台签名组件同样生效，不依赖系统授权。
+    </div>
+
+    <div class="callout">
+      <strong>处置难度评估：</strong> 4.0 加了 signature 级权限保护，AIDL 拉起服务这条路被堵；但采集本体不受影响。停进程、撤权限、封域名仍然有效；彻底清除只能刷非定制固件。
+    </div>
+  </div>
+</section>
+
+<section id="sample">
+  <div class="wrap">
+    <h2><span class="num">06</span>样本</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>项</th><th>值</th></tr></thead>
+        <tbody>
+          <tr><td>versionName</td><td><code>4.0.0-20260910</code></td></tr>
+          <tr><td>SHA-256</td><td><code style="white-space:normal">42fbfebedd8711b2ca22d3d969324f7ed7c757d838e143bf6cf4d2e8e1ed8556</code></td></tr>
+          <tr><td>MD5</td><td><code>11ee024eb1a9fe68a9c403a23c882fd0</code></td></tr>
+          <tr><td>大小</td><td>3,884,625 B</td></tr>
+          <tr><td>报文公钥</td><td><code>assets/cudms_main_pub.cer</code>，SHA-256 <code>4e71934c…eee522</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout info">
+      <strong>仓库不托管 APK。</strong> 从自己的设备提取并校验：
+<pre style="margin-top:10px"><code>adb shell pm path com.mobiletools.systemhelper
+adb pull /system/priv-app/SystemHelper/SystemHelper.apk
+sha256sum SystemHelper.apk   # 与上表比对</code></pre>
+      <strong>为什么不做“一键安装”：</strong> 这是 <code>priv-app</code> 组件，靠平台签名获得 <code>READ_PRIVILEGED_PHONE_STATE</code>。侧载一份普通签名的副本，装上也读不到 IMEI、起不了服务——除了占地方，什么都不会复现。研究它请用静态分析，别装。
+    </div>
+  </div>
+</section>
+
+<footer class="site">
+  <div class="wrap">
+    <nav>
+      <a href="../index.html">总览</a><a href="1.2.html">1.2</a><a href="3.0.1.html">3.0.1</a><a href="4.0.0.html">4.0.0</a>
+      <a href="../webadb.html">网页 ADB</a>
+      <a href="https://github.com/Richard8695847/SystemHelper">源码仓库</a>
+    </nav>
+    <p>© <span data-year>2026</span> SystemHelper 研究集 · CC BY 4.0</p>
+  </div>
+</footer>
+
+<script src="../assets/site.js"></script>
+</body>
+</html>

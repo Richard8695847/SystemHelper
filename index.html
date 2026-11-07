@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SystemHelper · 预装系统组件采集与上报分析</title>
+<meta name="description" content="对 Android 包 com.mobiletools.systemhelper（中国联通 CU-DMS 终端注册组件）三个版本的静态分析：采什么、发到哪、为什么关不掉。">
+<meta property="og:title" content="SystemHelper · 预装系统组件采集与上报分析">
+<meta property="og:description" content="三个版本、49 个上报字段、四条可验证的缺陷。每条结论都附 文件:行号。">
+<meta property="og:type" content="website">
+<link rel="stylesheet" href="assets/site.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230a0e13'/><circle cx='16' cy='16' r='6' fill='%23f0b429'/></svg>">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap bar">
+    <a class="brand" href="index.html"><span class="dot"></span>SystemHelper</a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-label="菜单">菜单</button>
+    <nav class="main">
+      <a href="index.html">总览</a>
+      <a href="versions/1.2.html">1.2</a>
+      <a href="versions/3.0.1.html">3.0.1</a>
+      <a href="versions/4.0.0.html">4.0.0</a>
+      <a href="webadb.html">网页 ADB</a>
+      <a href="index.html#reports">报告</a>
+      <a href="https://github.com/Richard8695847/SystemHelper">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap hero">
+  <div class="eyebrow">Android · Preinstalled · Telemetry</div>
+  <h1>一个预装在系统分区里的<br><span class="hl">“设备注册”组件</span>，在采什么？</h1>
+  <p class="lede">
+    包名 <code>com.mobiletools.systemhelper</code>，三版同一身份：中国联通 <strong>CU-DMS 终端注册 / 设备管理</strong>客户端。
+    没有界面、没有开关、卸载不掉；上报 IMEI、基站、经纬度、应用清单、蓝牙配对设备。
+    <strong>下面每一条结论都能在 APK 里按 <code>文件:行号</code> 复核。</strong>
+  </p>
+  <div class="chips">
+    <span class="chip on">v1.2-20220907</span>
+    <span class="chip on">v3.0.1-20260313</span>
+    <span class="chip on">v4.0.0-20260910</span>
+    <span class="chip">静态分析</span>
+    <span class="chip">CC BY 4.0</span>
+  </div>
+  <div class="actions">
+    <a class="btn primary" href="#verdict">看 60 秒结论 →</a>
+    <a class="btn" href="versions/4.0.0.html">最新版 4.0.0 详解</a>
+    <a class="btn" href="webadb.html">网页里查自己的手机</a>
+  </div>
+</div>
+
+<!-- ============ 结论 ============ -->
+<section id="verdict">
+  <div class="wrap">
+    <h2><span class="num">01</span>60 秒结论</h2>
+    <p class="sub">先看这五条，剩下的都是它们的证据。</p>
+
+    <div class="kpis">
+      <div class="kpi"><div class="v bad">0</div><div class="k">隐私弹窗 / 同意界面</div></div>
+      <div class="kpi"><div class="v bad">0</div><div class="k">开关 / 退出入口</div></div>
+      <div class="kpi"><div class="v warn">49</div><div class="k">单次上报字段数（4.0）</div></div>
+      <div class="kpi"><div class="v warn">24h</div><div class="k">应用清单上报周期（3.0.1 起）</div></div>
+      <div class="kpi"><div class="v ok">3</div><div class="k">已分析版本</div></div>
+    </div>
+
+    <ul class="clean" style="margin-top:26px">
+      <li><strong>它不是 App，是预置组件。</strong> 要求 <code>READ_PRIVILEGED_PHONE_STATE</code>（仅 <code>priv-app</code> / 平台签名可得）与 <code>sharedUserId</code>，普通安装流程拿不到这些权限。所以它能跑，只可能是出厂就在系统分区里。</li>
+      <li><strong>“用户许可”是个常量。</strong> <code>GlobalSetting.isUserPermissionOpen</code> 默认 <code>true</code>，而且门关着仍然 <code>insertRecord</code>；另一条路径把系统的 <code>device_provisioned</code>（开机向导完成标志）当作“已同意”。<strong>不存在同意对话框。</strong></li>
+      <li><strong>采的东西远超“注册”所需。</strong> 注册只要 5 个字段；实际采了 40+，其中至少 20 个与注册无关：应用清单+前台时长+分卡流量、连续经纬度、WiFi BSSID/SSID、蓝牙配对设备与 MAC、卫星通信开关。</li>
+      <li><strong>通道有结构性问题。</strong> 1.2/3.0.1 是明文 HTTP；4.0 上了 HTTPS，但证书校验失败会<strong>自动降级回明文</strong>，而且 <code>sign</code> 参数是“用公钥加密的密钥”，不是签名——任何人都能伪造。</li>
+      <li><strong>三版都没有“反诈”能力。</strong> 字符串、原生库、网络端点、能力四层全部零命中。但它采的数据集，恰好是反诈画像的理想输入——<em>这是能力问题，不是功能问题</em>。</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ 数据流 ============ -->
+<section id="flow">
+  <div class="wrap">
+    <h2><span class="num">02</span>数据是怎么流出去的</h2>
+    <p class="sub">四个触发点、四类采集、一次组包、一层“加密”、一个终点。</p>
+
+    <div class="flow">
+      <div class="flow-node">
+        <div class="t">触发</div>
+        <div class="d">开机 +4min<br>换卡 / SIM 状态<br>联网<br>定时 24h · 60min · 30min<br>应用安装变化</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">
+        <div class="t">采集</div>
+        <div class="d">身份：IMEI · IMSI · ICCID<br>位置：TAC · CID · PCI · 经纬度<br>行为：应用清单 · 前台时长 · 流量<br>关系：蓝牙配对 · 卫星开关</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">
+        <div class="t">组包</div>
+        <div class="d">49 字段 JSON<br>插入序固定</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">
+        <div class="t">封装</div>
+        <div class="d">key = SHA256(json)<br>body = AES-256-GCM<br>sign = RSA_pub(key)</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">
+        <div class="t">发送</div>
+        <div class="d">POST dm.wo.com.cn<br>:18081 HTTPS（4.0）<br>:18080 明文回退</div>
+      </div>
+    </div>
+
+    <p class="small" style="margin-top:14px">
+      1.2 里另有 5 条链路（<code>/public/ip</code>、<code>:6002/getRegisterLog</code>、BONC SOAP、<code>cnc-labs.eicp.net</code>、<code>webservice.chinaunicom.com</code>），经交叉引用确认<strong>均为死代码</strong>，只有 <code>/registerv3</code> 在跑。
+    </p>
+  </div>
+</section>
+
+<!-- ============ 四条硬伤 ============ -->
+<section id="defects">
+  <div class="wrap">
+    <h2><span class="num">03</span>四条最硬的问题</h2>
+    <p class="sub">全部来自反编译代码，不依赖任何运行时抓包。</p>
+
+    <div class="grid two">
+      <div class="card">
+        <div class="kicker">缺陷 1 · 认证</div>
+        <h3><code>sign</code> 不是签名，是加密</h3>
+        <p><code>RSA/ECB/PKCS1Padding</code> + <code>ENCRYPT_MODE</code>，用随包分发的公钥加密 <code>SHA256(json)</code>。密钥由明文推出，签名由密钥推出——<strong>自指闭环，零认证</strong>。</p>
+      </div>
+      <div class="card">
+        <div class="kicker">缺陷 2 · 加密</div>
+        <h3>GCM 的 IV 从密钥里派生</h3>
+        <p><code>IV[0..7]=key[0..7]</code>、<code>IV[8..15]=key[24..31]</code>。同一明文→同一密文，构成 GCM 已知的 forbidden attack 前提。</p>
+      </div>
+      <div class="card">
+        <div class="kicker">缺陷 3 · 传输</div>
+        <h3><code>TrustManager</code> 只看有效期</h3>
+        <p><code>for (X509Certificate c : chain) c.checkValidity();</code> —— 没有 <code>verify()</code>，没有 pin。自签证书 + <code>SAN=dm.wo.com.cn</code> 即可中间人。</p>
+      </div>
+      <div class="card">
+        <div class="kicker">缺陷 4 · 降级</div>
+        <h3>TLS 失败就退回明文</h3>
+        <p><code>"HTTPS fail by cert invalid, trigger HTTP fallback!"</code> → 重发到 <code>:18080</code>。企业 WiFi、校园网、公共热点都能把整条链路打回明文。</p>
+      </div>
+    </div>
+
+    <div class="callout info" style="margin-top:22px">
+      <strong>还有一个不是缺陷、但更刺眼的设计：</strong> <code>model</code> 与 <code>manuf</code> 明文放在 URL query 上。body 加密得再好，抓包也知道<strong>哪款手机在向联通注册</strong>。
+    </div>
+  </div>
+</section>
+
+<!-- ============ 三版对比 ============ -->
+<section id="compare">
+  <div class="wrap">
+    <h2><span class="num">04</span>三个版本，一条主线</h2>
+    <p class="sub">采样范围只增不减；用户始终没有知情权、选择权、删除权。</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>项</th><th>1.2（20220907）</th><th>3.0.1（20260313）</th><th>4.0.0（20260910）</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>签名主体</td><td><code>CN=NewDM, O=CU</code><br><span class="small">联通自签，50 年有效期</span></td><td><code>CN=MIUI, O=Xiaomi</code><br><span class="small">小米平台密钥</span></td><td><code>CN=NewDM, O=CU</code></td></tr>
+          <tr><td>代码形态</td><td>408 个可读类<br>58 家厂商适配器</td><td>全量混淆到单字母包<br>12 家适配器</td><td>混淆<br>13 家（去 HUAWEI、加 MOTO/WIKO）</td></tr>
+          <tr><td>加密</td><td>AES-ECB + MD5 密钥<br>RSA-1024</td><td>同左，一行没改</td><td>AES-256-GCM + SHA-256<br>RSA-2048</td></tr>
+          <tr><td>传输</td><td class="no">明文 HTTP :18080</td><td class="no">明文 HTTP :18080</td><td class="warn">HTTPS :18081<br>+ 明文回退 :18080</td></tr>
+          <tr><td>新增采集</td><td>手机号 <code>MSISDN</code></td><td>百度定位 SDK<br><code>SigInfo</code> 路测字段</td><td>蓝牙配对 + MAC<br>卫星通信开关</td></tr>
+          <tr><td>应用清单周期</td><td>7 天</td><td>24 小时</td><td>24 小时</td></tr>
+          <tr><td>本地队列</td><td>100 条</td><td>10 条，读完即删<br>0–24h 随机抖动</td><td>10 条，同 3.0.1</td></tr>
+          <tr><td>反诈能力</td><td class="no">无</td><td class="no">无</td><td class="no">无</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 三个版本入口 ============ -->
+<section id="versions">
+  <div class="wrap">
+    <h2><span class="num">05</span>逐版详解</h2>
+    <p class="sub">每一页包含：样本档案、该版采集字段、触发时序、传输与加密、该版独有的问题、自查与处置命令。</p>
+
+    <div class="grid three">
+      <a class="card link" href="versions/1.2.html">
+        <div class="kicker">v1.2 · 20220907</div>
+        <h3>草稿态的一代</h3>
+        <p>可读代码、明文 HTTP、1024 位 RSA、ECB、手机号、花生壳调试域名还留在包里。58 家厂商适配器。</p>
+        <p class="small" style="margin-top:12px">versionCode 3 · 1.69 MB</p>
+      </a>
+      <a class="card link" href="versions/3.0.1.html">
+        <div class="kicker">v3.0.1 · 20260313</div>
+        <h3>藏起来 + 加强采集</h3>
+        <p>全量混淆、接入百度定位 SDK、加 RF 路测字段、换小米平台签名、频率 ×7、加随机抖动。</p>
+        <p class="small" style="margin-top:12px">versionCode 34 · 3.83 MB</p>
+      </a>
+      <a class="card link" href="versions/4.0.0.html">
+        <div class="kicker">v4.0.0 · 20260910</div>
+        <h3>补安全债 + 再扩一环</h3>
+        <p>RSA-2048 / AES-GCM / HTTPS 是真进步；同时加蓝牙配对设备、卫星能力位，并留下明文降级回退。</p>
+        <p class="small" style="margin-top:12px">3.88 MB · 19 项权限</p>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 自查 ============ -->
+<section id="check">
+  <div class="wrap">
+    <h2><span class="num">06</span>查你自己的手机</h2>
+    <p class="sub">不需要 root，四条命令就能确认它在不在、跑不跑、发不发。</p>
+
+<pre><code># 1) 有没有、什么版本
+adb shell dumpsys package com.mobiletools.systemhelper | grep versionName
+
+# 2) 权限是否真的被授予
+adb shell dumpsys package com.mobiletools.systemhelper | grep granted
+adb shell cmd appops get com.mobiletools.systemhelper
+
+# 3) 是否在跑、有没有待触发的闹钟
+adb shell ps -A | grep systemhelper
+adb shell dumpsys alarm | grep systemhelper
+
+# 4) 是否真的在上报（4.0 注意 :18080 与 :18081 两个端口）
+#    用 PCAPdroid / NetGuard 过滤 dm.wo.com.cn 即可</code></pre>
+
+    <h3>停用与拦截（不依赖 root）</h3>
+<pre><code>adb shell pm disable-user --user 0 com.mobiletools.systemhelper
+adb shell pm revoke com.mobiletools.systemhelper android.permission.READ_PHONE_STATE</code></pre>
+
+<pre><code># NetGuard / 路由器 hosts —— 黑洞这个域名即覆盖 18080 与 18081
+0.0.0.0 dm.wo.com.cn</code></pre>
+
+    <div class="callout ok">
+      <strong>为什么“封域名”最有效：</strong> 3.0.1 起组件用了小米平台密钥签名，系统层面很难停用；但网络层拦截不依赖任何系统授权，对平台签名组件同样生效。
+    </div>
+  </div>
+</section>
+
+<!-- ============ 报告 ============ -->
+<section id="reports">
+  <div class="wrap">
+    <h2><span class="num">07</span>六份报告</h2>
+    <p class="sub">网页是摘要，完整推理过程在下面这些文档里。每条断言都带 <code>文件:行号</code>。</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>#</th><th>文档</th><th>内容</th></tr></thead>
+        <tbody>
+          <tr><td>01</td><td><a href="https://github.com/Richard8695847/SystemHelper/blob/main/docs/01-reverse-1.2.md">1.2 逆向分析与根治</a></td><td>权限模型、四个上报触发点、明文通道、本地留存、四层处置、可投诉的固定证据</td></tr>
+          <tr><td>02</td><td><a href="https://github.com/Richard8695847/SystemHelper/blob/main/docs/02-api-protocol.md">上报接口（API）技术报告</a></td><td>6 个 URL 的死活判定、AES/<code>sign</code> 结构、本地 mock 闭环验证</td></tr>
+          <tr><td>03</td><td><a href="https://github.com/Richard8695847/SystemHelper/blob/main/docs/03-compare-3.0.1.md">3.0.1 对比分析</a></td><td>签名换小米、全量混淆、百度定位 SDK、<code>SigInfo</code> 路测字段、<code>MSISDN</code> 归零</td></tr>
+          <tr><td>04</td><td><a href="https://github.com/Richard8695847/SystemHelper/blob/main/docs/04-compare-4.0.0.md">4.0.0 对比分析</a></td><td>三版横向、四项真实加固、蓝牙与卫星扩张、设计意图分析（事实层/推断层分离）</td></tr>
+          <tr><td>05</td><td><a href="https://github.com/Richard8695847/SystemHelper/blob/main/docs/05-cudms-protocol.md">CU-DMS 上报协议分析</a></td><td>49 字段字典 + 敏感度分级、客户端四缺陷、加固建议</td></tr>
+          <tr><td>06</td><td><a href="https://github.com/Richard8695847/SystemHelper/blob/main/docs/06-rumor-verification.md">外部传闻逐条核验</a></td><td>日文帖与两份中文来源的核验：哪些成立、哪些归因错位；附三版差异速查</td></tr>
+          <tr><td>—</td><td><a href="https://github.com/Richard8695847/SystemHelper/blob/main/docs/iocs.txt">IOC 清单</a></td><td>端点、URL、组件、哈希、签名指纹</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 证据 ============ -->
+<section id="evidence">
+  <div class="wrap">
+    <h2><span class="num">08</span>样本与证据</h2>
+    <p class="sub">三条 SHA-256 足以定位你手上那一份。仓库只放公开证书与哈希，不放 APK 本体。</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>版本</th><th>SHA-256</th><th>MD5</th><th>大小</th></tr></thead>
+        <tbody>
+          <tr><td>1.2-20220907</td><td><code>416d0fc0…9a6015d</code></td><td><code>8e9df43e…e69d37fb</code></td><td>1,685,429 B</td></tr>
+          <tr><td>3.0.1-20260313</td><td><code>1de8d965…4ff6c65</code></td><td><code>9b68bd6b…25ed9dc8</code></td><td>3,831,041 B</td></tr>
+          <tr><td>4.0.0-20260910</td><td><code>42fbfebe…e1ed8556</code></td><td><code>11ee024e…3c882fd0</code></td><td>3,884,625 B</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="small" style="margin-top:14px">
+      完整哈希见各版本页与 <a href="https://github.com/Richard8695847/SystemHelper/tree/main/evidence">evidence/</a>；证书（<code>cudms_main_pub.cer</code>、<code>unicom_sign_cert_v2.pem</code>、<code>pub.cer</code>）与哈希清单也在那里。
+    </p>
+  </div>
+</section>
+
+<!-- ============ 声明 ============ -->
+<section id="about">
+  <div class="wrap">
+    <h2><span class="num">09</span>事实、推断与许可</h2>
+    <div class="grid two">
+      <div class="card">
+        <div class="kicker">事实层</div>
+        <h3>可在 APK 内逐条验证</h3>
+        <p>字段、权限、调用链、证书、哈希。站点与报告里的每个数字都对应一段可反编译复核的代码。</p>
+      </div>
+      <div class="card">
+        <div class="kicker">推断层</div>
+        <h3>已明确标注</h3>
+        <p>“设计意图”“数据可能去向”属推断。没有证据表明该数据集已被出售、共享或用于任何监管画像，报告不主张这类结论。</p>
+      </div>
+    </div>
+
+    <div class="callout" style="margin-top:20px">
+      <strong>许可：</strong> 文字与图表以 <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> 发布，欢迎全文转载、翻译、二次分发（含商业媒体），保留署名与仓库链接即可。
+      <br><strong>不含：</strong> APK 本体、反编译源码、任何针对线上系统的操作方法。
+    </div>
+  </div>
+</section>
+
+<footer class="site">
+  <div class="wrap">
+    <nav>
+      <a href="index.html">总览</a>
+      <a href="versions/1.2.html">1.2</a>
+      <a href="versions/3.0.1.html">3.0.1</a>
+      <a href="versions/4.0.0.html">4.0.0</a>
+      <a href="webadb.html">网页 ADB</a>
+      <a href="https://github.com/Richard8695847/SystemHelper">源码仓库</a>
+      <a href="https://github.com/Richard8695847/SystemHelper/blob/main/DISCLAIMER.md">免责声明</a>
+      <a href="https://github.com/Richard8695847/SystemHelper/blob/main/CONTRIBUTING.md">更正与贡献</a>
+    </nav>
+    <p>© <span data-year>2026</span> SystemHelper 研究集 · CC BY 4.0 · 独立研究，与任何厂商、运营商无隶属关系。</p>
+  </div>
+</footer>
+
+<script src="assets/site.js"></script>
+</body>
+</html>
