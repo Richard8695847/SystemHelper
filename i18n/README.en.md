@@ -6,6 +6,8 @@ This repository contains static-analysis results for three versions (1.2 / 3.0.1
 
 *Translations: [简体中文](../README.md) · [繁體中文](README.zh-TW.md) · [日本語](README.ja.md)*
 
+**Web version: <https://richard8695847.github.io/SystemHelper/>**
+
 ---
 
 ## At a glance

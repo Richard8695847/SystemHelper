@@ -168,6 +168,8 @@ adb shell pm revoke com.mobiletools.systemhelper android.permission.READ_PHONE_S
 
 其他语言版本：[繁體中文](i18n/README.zh-TW.md) · [English](i18n/README.en.md) · [日本語](i18n/README.ja.md)
 
+**在线版（网页）：<https://richard8695847.github.io/SystemHelper/>** —— 总览、三版详解、网页 ADB 可行性。
+
 ---
 
 ## 事实与推断
