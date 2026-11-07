@@ -1,0 +1,7 @@
+# SystemHelper 样本指纹清单
+# 用途：下载/提取到 APK 后执行  sha256sum -c SHA256SUMS.txt  自验
+# 注意：本仓库不托管下列二进制，仅提供指纹。
+
+416d0fc0405fc19b243e72f2a7963517e5b88991a7dfac494934449969a6015d  SystemHelper-com.mobiletools.systemhelper-1.2-20220907.apk
+1de8d965e295db27e189aa179cdb45438d7f759cffbb43ce55f840b614ff6c65  SystemHelper_3.0.1-20260313(1).apk
+42fbfebedd8711b2ca22d3d969324f7ed7c757d838e143bf6cf4d2e8e1ed8556  SystemHelper.apk
