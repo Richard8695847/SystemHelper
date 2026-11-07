@@ -2,7 +2,7 @@
 
 **システムパーティションにプリインストールされた、UI もスイッチもアンインストール手段もない「端末登録」コンポーネント。何を集め、どこへ送り、なぜ止められないのか。**
 
-本リポジトリは Android パッケージ `com.mobiletools.systemhelper` の 3 バージョン（1.2 / 3.0.1 / 4.0.0）の静的解析結果です。すべての結論に `ファイル:行番号` を付けており、同じ APK を jadx で開けば再現できます。**APK 本体および逆コンパイル済みソースは含みません**（理由は [DISCLAIMER](../DISCLAIMER.md)）。
+本リポジトリは Android パッケージ `com.mobiletools.systemhelper` の 3 バージョン（1.2 / 3.0.1 / 4.0.0）の静的解析結果です。すべての結論に `ファイル:行番号` を付けており、同じ APK を jadx で開けば再現できます。**逆コンパイル済みソースは含みません**。3 バージョンの APK は [Release の添付ファイル](https://github.com/Richard8695847/SystemHelper/releases/tag/v1.0.0) として提供しています（[DISCLAIMER](../DISCLAIMER.md)・[SAMPLES](../SAMPLES.md) 参照）。
 
 *他の言語: [简体中文](../README.md) · [繁體中文](README.zh-TW.md) · [English](README.en.md)*
 

@@ -2,7 +2,7 @@
 
 **系統分區裡預裝著一個沒有介面、沒有開關、卸載不掉的「設備註冊」元件——它到底在採集什麼、發到哪裡、為什麼關不掉。**
 
-本倉庫是 Android 套件 `com.mobiletools.systemhelper` 三個版本（1.2 / 3.0.1 / 4.0.0）的靜態分析結果。所有結論都附 `檔案:行號`，可用 jadx 打開同一份 APK 自行複核。倉庫**不含 APK、不含反編譯原始碼**，只有分析結論與公開憑證（原因見 [DISCLAIMER](../DISCLAIMER.md)）。
+本倉庫是 Android 套件 `com.mobiletools.systemhelper` 三個版本（1.2 / 3.0.1 / 4.0.0）的靜態分析結果。所有結論都附 `檔案:行號`，可用 jadx 打開同一份 APK 自行複核。倉庫**不含反編譯原始碼**；三個版本的 APK 樣本以 [Release 附件](https://github.com/Richard8695847/SystemHelper/releases/tag/v1.0.0) 形式提供，供獨立複核（見 [DISCLAIMER](../DISCLAIMER.md)、[SAMPLES](../SAMPLES.md)）。
 
 *其他語言版本：[简体中文](../README.md) · [English](README.en.md) · [日本語](README.ja.md)*
 

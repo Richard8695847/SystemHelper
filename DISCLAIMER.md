@@ -4,7 +4,7 @@
 
 1. **本仓库是安全研究性质的公开分析**，目的是让普通用户能够判断"这台设备在向谁、以什么频率、上报什么数据"，并给出可执行的拦截与加固方案。作者与任何厂商、运营商、机构无隶属或利益关系。
 
-2. **本仓库不包含被分析软件的副本**，也不包含反编译源码、反编译工程或可复用的攻击载荷。仓库内仅有：分析文本、图表、公开证书/公钥（均随 APK 公开分发）与其哈希。
+2. **本文件与各报告不含反编译源码、反编译工程或可复用的攻击载荷。** 三个版本的 APK 样本以 [Release](https://github.com/Richard8695847/SystemHelper/releases/tag/v1.0.0) 附件形式提供，用途限定为独立复核本报告的结论；仓库其余内容为分析文本、图表、公开证书/公钥与哈希。样本的来源、哈希与签名见 [SAMPLES.md](SAMPLES.md)。
 
 3. **报告中出现的域名、包名、证书主体、公司名称**仅用于标识被分析对象，属事实性引用，不构成对其的指控。文中对厂商行为的描述均指向**代码与配置层面可验证的事实**；涉及意图、可能用途的判断已在文中明确标注为推断，并给出依据边界。
 
@@ -24,7 +24,7 @@
 
 1. **This repository is public security research.** Its purpose is to let ordinary users determine what a preinstalled component collects, how often, and where it sends it — and to give them actionable mitigation. The author is not affiliated with any vendor, carrier, or institution.
 
-2. **No copy of the analysed software is redistributed here**, nor any decompiled source, decompilation project, or reusable attack payload. The repository contains only: analysis text, diagrams, public certificates/keys (all distributed with the APK itself), and their hashes.
+2. **This document and the reports contain no decompiled source, decompilation project, or reusable attack payload.** The three APK samples are provided as [Release](https://github.com/Richard8695847/SystemHelper/releases/tag/v1.0.0) assets, solely so that others can independently verify the findings; the rest of the repository is analysis text, diagrams, public certificates/keys and hashes. Provenance, hashes and signer identities are documented in [SAMPLES.md](SAMPLES.md).
 
 3. **Domain names, package names, certificate subjects and company names** appear solely to identify the analysed object. Statements about vendor behaviour refer to **facts verifiable in code and configuration**. Judgements about intent or possible use are explicitly labelled as inference, with their evidential boundary stated.
 

@@ -1,6 +1,6 @@
 # 样本溯源
 
-> **本仓库不托管 APK。** 这里给的是**指纹**与**获取方法**——足够让任何人在自己设备上确认"我手上这份是不是同一份"，而不需要从第三方仓库下载来路不明的二进制。
+> **三个版本的 APK 已作为 [Release 附件](https://github.com/Richard8695847/SystemHelper/releases/tag/v1.0.0) 发布；本文同时给出指纹与本地提取方法。** 两条路拿到的是同一份文件——用下面的 SHA-256 比对即可确认，不必信任任何第三方下载站。
 
 ## 一、三个版本的指纹
 
@@ -60,6 +60,6 @@ sha256sum SystemHelper.apk
 
 ## 六、与 Release 的关系
 
-Release 里放的是**分析集**（报告、IOC、证书、站点离线副本）与 `SHA256SUMS.txt`，用于版本归档与 CDN 分发。二进制本体不在其中。
+Release `v1.0.0` 里有两类内容：**三个版本的 APK 样本**（`SystemHelper-1.2-20220907.apk` / `SystemHelper-3.0.1-20260313.apk` / `SystemHelper-4.0.0-20260910.apk`），以及**分析集** `SystemHelper-analysis-v1.0.0.zip`（报告、IOC、证书、站点离线副本）。下载后请用 `SHA256SUMS.txt` 校验。
 
 若你从别处获得了 APK，请先用上面的 SHA-256 校验，再决定是否使用——未经校验的第三方样本包不值得信任，对研究结论更是污染源。

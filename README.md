@@ -4,7 +4,7 @@
 
 本仓库是对 Android 包 `com.mobiletools.systemhelper` 三个版本（1.2 / 3.0.1 / 4.0.0）的静态分析结果。全部结论来自 APK 反编译、证书提取、字符串与字节码比对，每条都附带 `文件:行号`，可自行复核。
 
-> **本仓库不含 APK、不含反编译源码，只含分析结论与公开证书。** 理由见 [DISCLAIMER](DISCLAIMER.md)。
+> **APK 样本以 [Release 附件](https://github.com/Richard8695847/SystemHelper/releases/tag/v1.0.0) 形式提供，用于独立复核；仓库内不含反编译源码。** 见 [DISCLAIMER](DISCLAIMER.md) 与 [SAMPLES.md](SAMPLES.md)。
 
 ---
 

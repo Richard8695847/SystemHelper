@@ -2,7 +2,7 @@
 
 **A preinstalled "device registration" component with no UI, no off switch, and no uninstall path — what it actually collects, where it sends it, and why you cannot turn it off.**
 
-This repository contains static-analysis results for three versions (1.2 / 3.0.1 / 4.0.0) of the Android package `com.mobiletools.systemhelper`. Every claim is traceable to a `file:line` reference in the decompiled APK. No APK and no decompiled source is redistributed here — only findings and public certificates (see [DISCLAIMER](../DISCLAIMER.md)).
+This repository contains static-analysis results for three versions (1.2 / 3.0.1 / 4.0.0) of the Android package `com.mobiletools.systemhelper`. Every claim is traceable to a `file:line` reference in the decompiled APK. No decompiled source is redistributed here; the three APK samples are provided as [Release assets](https://github.com/Richard8695847/SystemHelper/releases/tag/v1.0.0) for independent verification (see [DISCLAIMER](../DISCLAIMER.md) and [SAMPLES](../SAMPLES.md)).
 
 *Translations: [简体中文](../README.md) · [繁體中文](README.zh-TW.md) · [日本語](README.ja.md)*
 
