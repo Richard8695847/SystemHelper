@@ -194,7 +194,21 @@ adb shell pm disable-user --user 0 com.mobiletools.systemhelper</code></pre>
 <section id="sample">
   <div class="wrap">
     <h2><span class="num">06</span>样本</h2>
-    <div class="table-wrap">
+
+    <div class="card" style="margin-bottom:18px">
+      <div class="kicker">下载</div>
+      <h3 style="margin-bottom:6px"><code>SystemHelper-4.0.0-20260910.apk</code></h3>
+      <div class="actions" style="margin-top:12px">
+        <a class="btn primary" href="https://github.com/Richard8695847/SystemHelper/releases/download/v1.0.0/SystemHelper-4.0.0-20260910.apk" rel="nofollow">下载 APK · 3.9 MB</a>
+        <a class="btn" href="https://github.com/Richard8695847/SystemHelper/blob/main/SHA256SUMS.txt" rel="nofollow">SHA256SUMS</a>
+      </div>
+      <p class="small" style="margin-top:12px">
+        SHA-256 <code style="white-space:normal">42fbfebedd8711b2…e1ed8556</code><br>
+        若按钮返回 404，说明该附件尚未上传到 Release；用下方的「从自己的设备取」可以拿到逐字节相同的文件。
+      </p>
+    </div>
+
+        <div class="table-wrap">
       <table>
         <thead><tr><th>项</th><th>值</th></tr></thead>
         <tbody>
@@ -208,7 +222,7 @@ adb shell pm disable-user --user 0 com.mobiletools.systemhelper</code></pre>
     </div>
 
     <div class="callout info">
-      <strong>仓库不托管 APK。</strong> 从自己的设备提取并校验：
+      <strong>APK 通过 Release 附件分发。</strong> 从自己的设备提取并校验：
 <pre style="margin-top:10px"><code>adb shell pm path com.mobiletools.systemhelper
 adb pull /system/priv-app/SystemHelper/SystemHelper.apk
 sha256sum SystemHelper.apk   # 与上表比对</code></pre>

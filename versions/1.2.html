@@ -163,7 +163,21 @@ adb shell pm revoke com.mobiletools.systemhelper android.permission.READ_PHONE_S
 <section id="sample">
   <div class="wrap">
     <h2><span class="num">07</span>样本</h2>
-    <div class="table-wrap">
+
+    <div class="card" style="margin-bottom:18px">
+      <div class="kicker">下载</div>
+      <h3 style="margin-bottom:6px"><code>SystemHelper-1.2-20220907.apk</code></h3>
+      <div class="actions" style="margin-top:12px">
+        <a class="btn primary" href="https://github.com/Richard8695847/SystemHelper/releases/download/v1.0.0/SystemHelper-1.2-20220907.apk" rel="nofollow">下载 APK · 1.7 MB</a>
+        <a class="btn" href="https://github.com/Richard8695847/SystemHelper/blob/main/SHA256SUMS.txt" rel="nofollow">SHA256SUMS</a>
+      </div>
+      <p class="small" style="margin-top:12px">
+        SHA-256 <code style="white-space:normal">416d0fc0405fc19b…69a6015d</code><br>
+        若按钮返回 404，说明该附件尚未上传到 Release；用下方的「从自己的设备取」可以拿到逐字节相同的文件。
+      </p>
+    </div>
+
+        <div class="table-wrap">
       <table>
         <thead><tr><th>项</th><th>值</th></tr></thead>
         <tbody>
@@ -174,7 +188,7 @@ adb shell pm revoke com.mobiletools.systemhelper android.permission.READ_PHONE_S
       </table>
     </div>
     <div class="callout info">
-      <strong>仓库不托管 APK。</strong> 需要样本做静态分析时，从<strong>你自己的设备</strong>取：
+      <strong>APK 通过 Release 附件分发。</strong> 需要样本做静态分析时，从<strong>你自己的设备</strong>取：
 <pre style="margin-top:10px"><code>adb shell pm path com.mobiletools.systemhelper
 # 输出形如 package:/system/priv-app/SystemHelper/SystemHelper.apk
 adb pull /system/priv-app/SystemHelper/SystemHelper.apk</code></pre>
